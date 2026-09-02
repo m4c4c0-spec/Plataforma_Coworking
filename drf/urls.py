@@ -9,5 +9,6 @@ handler404 = views.error_404
 urlpatterns = [
     path(settings.ADMIN_URL_PATH, admin.site.urls),
     path('', views.bienvenida, name='bienvenida'),
-    path('bienvenida/', views.bienvenida, name='bienvenida_alternativa'),
+    path('', views.inicio, name='inicio')
 ]
+
