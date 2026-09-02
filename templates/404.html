@@ -1,0 +1,556 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <title>Página no encontrada | Plataforma Coworking</title>
+    <style>
+        :root {
+            --ink: #292722;
+            --muted: #706b61;
+            --paper: #fffdf8;
+            --canvas: #f1eadf;
+            --line: #d8cdbd;
+            --accent: #d96842;
+            --accent-dark: #ad472a;
+            --sage: #778875;
+            --shadow: rgba(67, 51, 34, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            min-height: 100%;
+        }
+
+        body {
+            margin: 0;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at 12% 18%, rgba(255, 253, 248, 0.9) 0 2px, transparent 3px),
+                linear-gradient(135deg, transparent 0 48%, rgba(106, 91, 69, 0.045) 49% 50%, transparent 51%) 0 0 / 42px 42px,
+                var(--canvas);
+            font-family: "Trebuchet MS", "Avenir Next", sans-serif;
+        }
+
+        .page-shell {
+            min-height: 100vh;
+            min-height: 100svh;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            width: min(1180px, calc(100% - 48px));
+            margin: 0 auto;
+        }
+
+        .site-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 30px 0;
+            border-bottom: 1px solid rgba(88, 73, 54, 0.2);
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--ink);
+            text-decoration: none;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .brand-mark {
+            display: grid;
+            place-items: center;
+            width: 38px;
+            height: 38px;
+            border: 2px solid var(--ink);
+            border-radius: 50% 50% 48% 42%;
+            background: var(--paper);
+            transform: rotate(-3deg);
+        }
+
+        .brand-mark svg {
+            width: 21px;
+            height: 21px;
+            transform: rotate(3deg);
+        }
+
+        .status-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted);
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+
+        .status-label::before {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            content: "";
+        }
+
+        main {
+            display: grid;
+            grid-template-columns: minmax(0, 0.95fr) minmax(380px, 1.05fr);
+            align-items: center;
+            gap: clamp(40px, 7vw, 100px);
+            padding: 58px 0 70px;
+        }
+
+        .eyebrow {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 0 0 22px;
+            color: var(--accent-dark);
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+        }
+
+        .eyebrow::before {
+            width: 32px;
+            height: 2px;
+            background: currentColor;
+            content: "";
+        }
+
+        h1 {
+            max-width: 620px;
+            margin: 0;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: clamp(3.2rem, 7vw, 6.3rem);
+            font-weight: 400;
+            letter-spacing: -0.065em;
+            line-height: 0.96;
+        }
+
+        h1 em {
+            color: var(--accent);
+            font-weight: 400;
+        }
+
+        .lead {
+            max-width: 520px;
+            margin: 28px 0 0;
+            color: var(--muted);
+            font-size: clamp(1rem, 1.5vw, 1.14rem);
+            line-height: 1.75;
+        }
+
+        .requested-path {
+            display: inline-block;
+            max-width: 100%;
+            margin-top: 18px;
+            padding: 7px 11px;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            color: #796d5e;
+            background: rgba(255, 253, 248, 0.6);
+            font-family: "Courier New", monospace;
+            font-size: 0.78rem;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 34px;
+        }
+
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-height: 50px;
+            padding: 0 20px;
+            border: 1px solid var(--ink);
+            border-radius: 4px;
+            color: var(--paper);
+            background: var(--ink);
+            box-shadow: 4px 4px 0 var(--accent);
+            font-size: 0.92rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: transform 160ms ease, box-shadow 160ms ease;
+        }
+
+        .button:hover {
+            box-shadow: 2px 2px 0 var(--accent);
+            transform: translate(2px, 2px);
+        }
+
+        .button:focus-visible {
+            outline: 3px solid rgba(217, 104, 66, 0.4);
+            outline-offset: 4px;
+        }
+
+        .button.secondary {
+            color: var(--ink);
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .button.secondary:hover {
+            color: var(--accent-dark);
+            background: rgba(255, 253, 248, 0.55);
+            transform: none;
+        }
+
+        .illustration {
+            position: relative;
+            isolation: isolate;
+            min-height: 470px;
+            animation: settle-in 700ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+        }
+
+        .number {
+            position: absolute;
+            top: -34px;
+            right: 0;
+            z-index: -1;
+            color: rgba(255, 253, 248, 0.72);
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: clamp(13rem, 27vw, 22rem);
+            font-weight: 700;
+            letter-spacing: -0.1em;
+            line-height: 1;
+            text-shadow: 1px 1px 0 rgba(94, 76, 55, 0.08);
+            user-select: none;
+        }
+
+        .desk-scene {
+            position: absolute;
+            inset: 72px 3% auto 5%;
+            padding: 38px 40px 30px;
+            border: 1px solid var(--line);
+            border-radius: 44% 3% 3% 3% / 9% 3% 3% 3%;
+            background: var(--paper);
+            box-shadow: 18px 20px 0 rgba(113, 99, 78, 0.09), 0 22px 55px var(--shadow);
+            transform: rotate(1.3deg);
+        }
+
+        .note {
+            width: min(100%, 330px);
+            min-height: 215px;
+            margin: 0 auto;
+            padding: 28px 30px;
+            border: 1px solid #d9cbb9;
+            background: #fff9df;
+            box-shadow: 0 8px 15px rgba(83, 63, 37, 0.1);
+            transform: rotate(-4deg);
+        }
+
+        .tape {
+            position: absolute;
+            top: 22px;
+            left: 50%;
+            width: 72px;
+            height: 24px;
+            background: rgba(175, 191, 168, 0.7);
+            transform: translateX(-50%) rotate(2deg);
+        }
+
+        .note-kicker {
+            color: var(--sage);
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+        }
+
+        .note strong {
+            display: block;
+            margin-top: 18px;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: clamp(1.6rem, 3vw, 2.25rem);
+            font-weight: 400;
+            line-height: 1.1;
+        }
+
+        .note-lines {
+            display: grid;
+            gap: 9px;
+            margin-top: 25px;
+        }
+
+        .note-lines span {
+            height: 1px;
+            background: #d8ccb4;
+        }
+
+        .note-lines span:last-child {
+            width: 68%;
+        }
+
+        .desk-line {
+            height: 10px;
+            margin-top: 38px;
+            border: 1px solid #9b6f4e;
+            border-radius: 99px;
+            background: #b9855d;
+            box-shadow: 0 5px 0 #8d6243;
+        }
+
+        .mug {
+            position: absolute;
+            right: 17px;
+            bottom: 21px;
+            width: 58px;
+            height: 66px;
+            border: 3px solid var(--ink);
+            border-radius: 5px 5px 18px 18px;
+            background: var(--accent);
+            transform: rotate(7deg);
+        }
+
+        .mug::after {
+            position: absolute;
+            top: 14px;
+            right: -23px;
+            width: 24px;
+            height: 28px;
+            border: 3px solid var(--ink);
+            border-left: 0;
+            border-radius: 0 18px 18px 0;
+            content: "";
+        }
+
+        .plant {
+            position: absolute;
+            bottom: 0;
+            left: -17px;
+            width: 82px;
+            height: 105px;
+        }
+
+        .plant-pot {
+            position: absolute;
+            bottom: 0;
+            left: 17px;
+            width: 52px;
+            height: 45px;
+            background: var(--sage);
+            clip-path: polygon(4% 0, 96% 0, 82% 100%, 18% 100%);
+        }
+
+        .leaf {
+            position: absolute;
+            bottom: 39px;
+            left: 37px;
+            width: 20px;
+            height: 55px;
+            border: 2px solid var(--ink);
+            border-radius: 100% 0 100% 0;
+            background: #8b9b80;
+            transform-origin: bottom center;
+        }
+
+        .leaf:nth-child(2) {
+            transform: rotate(-42deg);
+        }
+
+        .leaf:nth-child(3) {
+            height: 65px;
+            transform: rotate(6deg);
+        }
+
+        .leaf:nth-child(4) {
+            transform: rotate(45deg);
+        }
+
+        .site-footer {
+            display: flex;
+            justify-content: space-between;
+            gap: 24px;
+            padding: 20px 0 28px;
+            border-top: 1px solid rgba(88, 73, 54, 0.2);
+            color: var(--muted);
+            font-size: 0.78rem;
+        }
+
+        @keyframes settle-in {
+            from {
+                opacity: 0;
+                transform: translateY(18px) rotate(-1deg);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) rotate(0);
+            }
+        }
+
+        @media (max-width: 820px) {
+            .page-shell {
+                width: min(calc(100% - 32px), 660px);
+            }
+
+            main {
+                grid-template-columns: 1fr;
+                gap: 22px;
+                padding: 48px 0 36px;
+            }
+
+            .content {
+                position: relative;
+                z-index: 2;
+            }
+
+            .illustration {
+                min-height: 380px;
+            }
+
+            .number {
+                top: -40px;
+                font-size: clamp(12rem, 49vw, 18rem);
+            }
+
+            .desk-scene {
+                inset: 50px 4% auto;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .site-header {
+                padding: 20px 0;
+            }
+
+            .brand-name {
+                max-width: 145px;
+                line-height: 1.1;
+            }
+
+            .status-label {
+                display: none;
+            }
+
+            h1 {
+                font-size: clamp(3rem, 16vw, 4.5rem);
+            }
+
+            .actions {
+                display: grid;
+            }
+
+            .illustration {
+                min-height: 330px;
+            }
+
+            .desk-scene {
+                padding: 34px 23px 24px;
+            }
+
+            .note {
+                min-height: 185px;
+                padding: 24px 22px;
+            }
+
+            .mug {
+                right: 7px;
+                transform: scale(0.8) rotate(7deg);
+            }
+
+            .site-footer {
+                display: block;
+                line-height: 1.7;
+            }
+
+            .site-footer span {
+                display: block;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-shell">
+        <header class="site-header">
+            <a class="brand" href="{% url 'bienvenida' %}" aria-label="Ir al inicio de Plataforma Coworking">
+                <span class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M5 19V9l7-4 7 4v10M9 19v-5h6v5M3 19h18"/>
+                    </svg>
+                </span>
+                <span class="brand-name">Plataforma Coworking</span>
+            </a>
+            <span class="status-label">Un pequeño desvío</span>
+        </header>
+
+        <main>
+            <section class="content" aria-labelledby="error-title">
+                <p class="eyebrow">Error 404</p>
+                <h1 id="error-title">Este espacio no está <em>reservado.</em></h1>
+                <p class="lead">
+                    La página que buscas cambió de lugar, ya no existe o quizás nunca estuvo aquí.
+                    Volvamos a un punto conocido para seguir trabajando.
+                </p>
+                {% if request.path %}
+                    <span class="requested-path" title="{{ request.path }}">{{ request.path }}</span>
+                {% endif %}
+                <nav class="actions" aria-label="Opciones para continuar">
+                    <a class="button" href="{% url 'bienvenida' %}">
+                        Volver al inicio
+                        <span aria-hidden="true">→</span>
+                    </a>
+                    <a class="button secondary" href="{% url 'bienvenida' %}" data-back-link>
+                        <span aria-hidden="true">←</span>
+                        Regresar
+                    </a>
+                </nav>
+            </section>
+
+            <div class="illustration" aria-hidden="true">
+                <div class="number">404</div>
+                <div class="desk-scene">
+                    <div class="tape"></div>
+                    <div class="note">
+                        <span class="note-kicker">Nota del equipo</span>
+                        <strong>Aquí falta algo.</strong>
+                        <div class="note-lines"><span></span><span></span><span></span></div>
+                    </div>
+                    <div class="desk-line"></div>
+                    <div class="mug"></div>
+                    <div class="plant">
+                        <div class="plant-pot"></div>
+                        <div class="leaf"></div>
+                        <div class="leaf"></div>
+                        <div class="leaf"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="site-footer">
+            <span>Plataforma Coworking</span>
+            <span>Espacios para trabajar, conectar y crear.</span>
+        </footer>
+    </div>
+    <script src="{% static 'cowork/js/404.js' %}" defer></script>
+</body>
+</html>

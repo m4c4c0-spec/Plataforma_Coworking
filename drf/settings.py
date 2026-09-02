@@ -10,7 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
+import os
 from pathlib import Path
+
+from django.utils.csp import CSP
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +23,29 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-rl$%8sm$5&4ts3k_b81ko$&4@3%%cxvux-et08!anphmdog&11'
+SECRET_KEY = os.getenv(
+    'DJANGO_SECRET_KEY',
+    'django-insecure-rl$%8sm$5&4ts3k_b81ko$&4@3%%cxvux-et08!anphmdog&11',
+)
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# The technical Django error pages expose URL patterns and implementation details.
+# Enable them explicitly for local development only.
+DEBUG = os.getenv('DJANGO_DEBUG', 'False').lower() in {'1', 'true', 'yes', 'on'}
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.getenv(
+        'DJANGO_ALLOWED_HOSTS',
+        'localhost,127.0.0.1,[::1]',
+    ).split(',')
+    if host.strip()
+]
+
+# Avoid exposing Django's conventional /admin/ endpoint to automated scanners.
+ADMIN_URL_PATH = os.getenv('DJANGO_ADMIN_URL_PATH', 'gestion-interna').strip('/')
+if not ADMIN_URL_PATH:
+    raise ValueError('DJANGO_ADMIN_URL_PATH cannot be empty.')
+ADMIN_URL_PATH = f'{ADMIN_URL_PATH}/'
 
 
 # Application definition
@@ -49,7 +69,27 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.csp.ContentSecurityPolicyMiddleware',
 ]
+
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = 'same-origin'
+X_FRAME_OPTIONS = 'DENY'
+
+# This policy also covers the admin: no third-party scripts, frames, or form targets.
+# Django admin uses a few inline styles, so style-src keeps that narrow exception.
+SECURE_CSP = {
+    'default-src': [CSP.SELF],
+    'script-src': [CSP.SELF],
+    'style-src': [CSP.SELF, CSP.UNSAFE_INLINE],
+    'img-src': [CSP.SELF, 'data:'],
+    'font-src': [CSP.SELF],
+    'connect-src': [CSP.SELF],
+    'frame-ancestors': [CSP.NONE],
+    'form-action': [CSP.SELF],
+    'base-uri': [CSP.SELF],
+    'object-src': [CSP.NONE],
+}
 
 ROOT_URLCONF = 'drf.urls'
 
