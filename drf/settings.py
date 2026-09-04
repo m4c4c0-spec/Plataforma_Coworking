@@ -22,10 +22,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
+# Esta clave publica permite ejecutar la evaluacion local sin configuracion adicional.
+# En produccion debe reemplazarse mediante la variable de entorno DJANGO_SECRET_KEY.
 SECRET_KEY = os.getenv(
     'DJANGO_SECRET_KEY',
-    'django-insecure-rl$%8sm$5&4ts3k_b81ko$&4@3%%cxvux-et08!anphmdog&11',
+    'django-insecure-development-only-not-for-production',
 )
 
 # The technical Django error pages expose URL patterns and implementation details.
