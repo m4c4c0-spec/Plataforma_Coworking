@@ -76,8 +76,8 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = 'same-origin'
 X_FRAME_OPTIONS = 'DENY'
 
-# This policy also covers the admin: no third-party scripts, frames, or form targets.
-# Django admin uses a few inline styles, so style-src keeps that narrow exception.
+# No third-party scripts, frames, or form targets are allowed.
+# Django admin and the public templates use inline styles, so style-src keeps that exception.
 SECURE_CSP = {
     'default-src': [CSP.SELF],
     'script-src': [CSP.SELF],

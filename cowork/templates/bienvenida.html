@@ -3,111 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bienvenida</title>
+    <meta name="description" content="Bienvenida a Plataforma Coworking.">
+    <title>Bienvenida | Plataforma Coworking</title>
     <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f4f1ea;
-            color: #2d2d2d;
+        :root {
+            --background: #f3f0e9;
+            --surface: #fffdf8;
+            --text: #26312c;
+            --muted: #68716d;
+            --primary: #2f6652;
+            --border: #ddd8ce;
         }
 
-        .container {
-            max-width: 900px;
-            margin: 80px auto;
-            padding: 30px;
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            color: var(--text);
+            background: var(--background);
+            font-family: Arial, sans-serif;
+        }
+
+        .page {
+            width: min(760px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 64px 0 32px;
         }
 
         .card {
-            background: #fffdfb;
-            border: 1px solid #e6ddd0;
+            padding: clamp(28px, 6vw, 56px);
+            border: 1px solid var(--border);
+            border-top: 6px solid var(--primary);
             border-radius: 18px;
-            padding: 30px 24px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
+            background: var(--surface);
+            box-shadow: 0 16px 40px rgba(38, 49, 44, 0.08);
+        }
+
+        .label {
+            margin: 0 0 18px;
+            color: var(--primary);
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
         }
 
         h1 {
-            margin: 0 0 16px;
-            font-size: 2.2rem;
-            color: #1f1f1f;
+            margin: 0 0 20px;
+            font-family: Georgia, serif;
+            font-size: clamp(2.7rem, 8vw, 5rem);
+            font-weight: 400;
+            letter-spacing: -0.05em;
+            line-height: 1;
         }
 
-        p {
-            font-size: 1.05rem;
+        .lead {
+            margin: 0;
+            color: var(--muted);
+            font-size: 1.08rem;
             line-height: 1.7;
-            margin: 0 0 18px;
         }
 
-        .badge {
-            display: inline-block;
-            background: #efe3d2;
-            color: #5a3b16;
-            padding: 7px 12px;
-            border-radius: 999px;
-            font-size: 0.82rem;
-            margin-bottom: 18px;
-            font-weight: 600;
+        ul {
+            margin: 28px 0 0;
+            padding-left: 22px;
         }
 
-        .lista {
-            margin: 24px 0 0;
-            padding-left: 20px;
-        }
-
-        .lista li {
+        li {
             margin-bottom: 10px;
             line-height: 1.5;
         }
 
-        .acciones {
-            margin-top: 28px;
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .boton {
+        .button {
             display: inline-block;
-            text-decoration: none;
-            padding: 12px 18px;
+            margin-top: 30px;
+            padding: 13px 20px;
             border-radius: 10px;
-            background: #2f2f2f;
             color: white;
-            font-weight: 600;
+            background: var(--primary);
+            font-weight: 700;
+            text-decoration: none;
         }
 
-        .boton.secondary {
-            background: transparent;
-            color: #2f2f2f;
-            border: 1px solid #cfc4b7;
+        .button:hover,
+        .button:focus-visible {
+            background: #244f3f;
+        }
+
+        footer {
+            padding: 22px 0;
+            color: var(--muted);
+            font-size: 0.82rem;
+            text-align: center;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="card">
-            <div class="badge">Plataforma Coworking</div>
-            <h1>Hola, bienvenido.</h1>
-            <p>
-                Esto todavía está empezando, pero ya hay un lugar para empezar a construirlo.
-                La idea es simple: dejar todo un poco más ordenado, útil y cómodo para quienes trabajan, crean o se reúnen aquí.
-            </p>
-            <p>
-                Estamos armando la primera versión de la plataforma y, como todo en los inicios, todavía se ve un poco cruda.
-                Pero esa es la parte buena: estamos en movimiento y cada detalle cuenta.
+    <main class="page">
+        <section class="card" aria-labelledby="welcome-title">
+            <p class="label">Plataforma Coworking</p>
+            <h1 id="welcome-title">Un espacio para trabajar mejor.</h1>
+            <p class="lead">
+                Estamos construyendo una plataforma para organizar espacios, reservas y comunidad
+                de una manera clara y sencilla.
             </p>
 
-            <ul class="lista">
-                <li>Reservas y espacios en proceso.</li>
-                <li>La experiencia se va afinando con el tiempo.</li>
-                <li>Todo esto sigue creciendo y mejorando.</li>
+            <ul>
+                <li>Encuentra espacios disponibles.</li>
+                <li>Organiza tu jornada de trabajo.</li>
+                <li>Conecta con la comunidad.</li>
             </ul>
 
-            <div class="acciones">
-                <a href="{% url 'inicio' %}" class="boton secondary"> Entrar </a>
-                <a href="#" class="boton secondary">Ver más</a>
-            </div>
-        </div>
-    </div>
+            <a class="button" href="{% url 'inicio' %}">Entrar a la plataforma →</a>
+        </section>
+
+        <footer>Plataforma Coworking · Espacios para trabajar, conectar y crear.</footer>
+    </main>
 </body>
 </html>

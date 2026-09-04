@@ -3,44 +3,198 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inicio Coworking </title>
-    
+    <meta name="description" content="Inicio de Plataforma Coworking.">
+    <title>Inicio | Plataforma Coworking</title>
     <style>
+        :root {
+            --background: #f3f0e9;
+            --surface: #fffdf8;
+            --text: #26312c;
+            --muted: #68716d;
+            --primary: #2f6652;
+            --soft: #e3ece7;
+            --border: #ddd8ce;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
+            color: var(--text);
+            background: var(--background);
             font-family: Arial, sans-serif;
-            background: #f4f1ea;
-            color: #2d2d2d;
+        }
+
+        .page {
+            width: min(960px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 32px 0;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .brand {
+            color: var(--text);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .back-link {
+            color: var(--primary);
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .intro {
+            padding: 64px 0 40px;
+        }
+
+        .label {
+            margin: 0 0 16px;
+            color: var(--primary);
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            max-width: 700px;
+            margin: 0;
+            font-family: Georgia, serif;
+            font-size: clamp(2.7rem, 8vw, 5rem);
+            font-weight: 400;
+            letter-spacing: -0.05em;
+            line-height: 1;
+        }
+
+        .lead {
+            max-width: 650px;
+            margin: 22px 0 0;
+            color: var(--muted);
+            font-size: 1.08rem;
+            line-height: 1.7;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .feature {
+            padding: 24px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: var(--surface);
+        }
+
+        .number {
+            display: inline-block;
+            padding: 6px 9px;
+            border-radius: 8px;
+            color: var(--primary);
+            background: var(--soft);
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        h2 {
+            margin: 20px 0 10px;
+            font-size: 1.25rem;
+        }
+
+        .feature p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.55;
+        }
+
+        .notice {
+            margin-top: 24px;
+            padding: 20px 24px;
+            border-left: 5px solid var(--primary);
+            border-radius: 10px;
+            background: var(--soft);
+        }
+
+        .notice strong,
+        .notice span {
+            display: block;
+        }
+
+        .notice span {
+            margin-top: 5px;
+            color: var(--muted);
+        }
+
+        footer {
+            margin-top: 48px;
+            padding-top: 22px;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 0.82rem;
+        }
+
+        @media (max-width: 720px) {
+            .features {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
-
-
-
-
-
-    
 </head>
 <body>
-    <div class="container">
-        <div class="card">
-            <div class="badge">Plataforma Coworking</div>
-            <h1>Hola, bienvenido.</h1>
-            <p>
-                Esto todavía está empezando, pero ya hay un lugar para empezar a construirlo.
-                La idea es simple: dejar todo un poco más ordenado, útil y cómodo para quienes trabajan, crean o se reúnen aquí.
-            </p>
-            <p>
-                Estamos armando la primera versión de la plataforma y, como todo en los inicios, todavía se ve un poco cruda.
-                Pero esa es la parte buena: estamos en movimiento y cada detalle cuenta.
-            </p>
+    <div class="page">
+        <header>
+            <a class="brand" href="{% url 'bienvenida' %}">Plataforma Coworking</a>
+            <a class="back-link" href="{% url 'bienvenida' %}">← Volver</a>
+        </header>
 
-            <ul class="lista">
-                <li>Reservas y espacios en proceso.</li>
-                <li>La experiencia se va afinando con el tiempo.</li>
-                <li>Todo esto sigue creciendo y mejorando.</li>
-            </ul>
+        <main>
+            <section class="intro" aria-labelledby="inicio-title">
+                <p class="label">Inicio</p>
+                <h1 id="inicio-title">Todo lo necesario, en un solo lugar.</h1>
+                <p class="lead">
+                    Esta es la base de una plataforma pensada para simplificar la experiencia
+                    de quienes utilizan y administran espacios de coworking.
+                </p>
+            </section>
 
-          
+            <section class="features" aria-label="Próximas funciones">
+                <article class="feature">
+                    <span class="number">01</span>
+                    <h2>Reservas</h2>
+                    <p>Consulta disponibilidad y organiza horarios de manera sencilla.</p>
+                </article>
+                <article class="feature">
+                    <span class="number">02</span>
+                    <h2>Espacios</h2>
+                    <p>Conoce las alternativas y encuentra el lugar que necesitas.</p>
+                </article>
+                <article class="feature">
+                    <span class="number">03</span>
+                    <h2>Comunidad</h2>
+                    <p>Conecta personas, equipos e ideas dentro del mismo entorno.</p>
+                </article>
+            </section>
+
+            <aside class="notice">
+                <strong>Primera versión en desarrollo</strong>
+                <span>Las funcionalidades se incorporarán progresivamente.</span>
+            </aside>
+        </main>
+
+        <footer>Plataforma Coworking · Espacios para trabajar, conectar y crear.</footer>
     </div>
 </body>
 </html>

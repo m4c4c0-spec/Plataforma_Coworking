@@ -1,50 +1,64 @@
-# Plataforma_Coworking
-Esta sera una futura plataforma de trabajo compartido para digitalizar los datos y tener una consistencia de cada uno 
+# Plataforma Coworking
 
-# Istalacion para windows 11/10
-Para comprobar la instalación de Python:
+  Plataforma de trabajo compartido orientada a organizar espacios, reservas y comunidad de una manera clara y sencilla.
+
+  ## Requisitos
+
+  - Python instalado.
+  - Git instalado.
+  - Sistema operativo Windows 10 u 11.
+
+  Para comprobar la instalación de Python:
 
   ```powershell
   py --version
-  ```
 
   ## Instalación en Windows
 
-  Abra PowerShell o CMD en la carpeta que contiene `manage.py`.
+  Abra PowerShell en la carpeta que contiene manage.py.
 
-  ### 1. Crear el entorno virtual
+  ### 1. Crear el ambiente virtual
 
-  ```powershell
   py -m venv .venv
-  ```
 
-  ### 2. Instalar las dependencias
+  ### 2. Activar el ambiente virtual
 
-  ```powershell
-  .\.venv\Scripts\python.exe -m pip install -r requirements.txt
-  ```
+  .\.venv\Scripts\Activate.ps1
 
-  ### 3. Preparar la base de datos
+  Cuando esté activado, debería aparecer (.venv) al comienzo de la línea de comandos.
 
-  ```powershell
-  .\.venv\Scripts\python.exe manage.py migrate
-  ```
+  ### 3. Instalar las dependencias
 
-  ### 4. Iniciar la aplicación
+  python -m pip install -r requirements.txt
 
-  ```powershell
-  .\.venv\Scripts\python.exe manage.py runserver --insecure
-  ```
+  ### 4. Preparar la base de datos
 
-  La opción `--insecure` permite cargar los archivos estáticos manteniendo `DEBUG=False`, lo que permite
-  mostrar la página 404 personalizada.
+  python manage.py migrate
 
-  ## Comprobar la aplicación
+  La base de datos db.sqlite3 se crea localmente y está excluida del repositorio mediante .gitignore.
 
-  Abra las siguientes direcciones:
+  ### 5. Iniciar la aplicación
 
-  - Bienvenida: <http://127.0.0.1:8000/>
-  - Bienvenida alternativa: <http://127.0.0.1:8000/bienvenida/>
-  - Prueba del error 404: <http://127.0.0.1:8000/prueba-404/>
+  python manage.py runserver
 
-  Para detener el servidor, presione `Ctrl+C` en la terminal.
+  El servidor estará disponible normalmente en:
+
+  http://127.0.0.1:8000/ (http://127.0.0.1:8000/)
+
+  ## Flujo principal
+
+  /                  → vista bienvenida → bienvenida.html
+  /inicio/           → vista inicio → inicio.html
+  Ruta inexistente   → handler404 → 404.html
+
+  ## Dependencias
+
+  Las dependencias utilizadas están registradas en requirements.txt:
+
+  - Django: framework principal utilizado para desarrollar la aplicación.
+  - asgiref: dependencia utilizada por Django para compatibilidad ASGI.
+  - sqlparse: dependencia utilizada por Django para procesar instrucciones SQL.
+
+  ## Detener el servidor
+
+  Presione Ctrl+C en la terminal donde se está ejecutando Django.
