@@ -19,7 +19,7 @@ py --version
 Abre PowerShell y entra en la carpeta raíz del proyecto, es decir, la carpeta que contiene `manage.py`, `requirements.txt`, `drf` y `cowork`:
 
 ```powershell
-cd ruta\donde\clonaste\Plataforma_Coworking
+cd ruta\ruta2\ruta3\Plataforma_Coworking
 ```
 
 No debes entrar en la carpeta `cowork`, porque esa es solamente la aplicación interna del proyecto.
