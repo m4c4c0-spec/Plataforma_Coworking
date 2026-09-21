@@ -71,9 +71,9 @@ Abre la aplicación en <http://127.0.0.1:8000/>.
 
 | URL | Vista | Plantilla | Resultado |
 | --- | --- | --- | --- |
-| `/` | `bienvenida` | `bienvenida.html` | Página de bienvenida |
-| `/inicio/` | `inicio` | `inicio.html` | Página principal |
-| Cualquier URL inexistente | `error_404` | `404.html` | Error HTTP 404 personalizado |
+| `/` | `bienvenida` | `cowork/bienvenida.html` | Página de bienvenida |
+| `/inicio/` | `inicio` | `cowork/inicio.html` | Página principal |
+| Cualquier URL inexistente | `error_404` | `cowork/404.html` | Error HTTP 404 personalizado |
 
 El botón **Entrar a la plataforma** utiliza el nombre de la ruta `inicio` para navegar desde la bienvenida hasta `/inicio/`.
 
@@ -88,12 +88,12 @@ cowork/urls.py busca una coincidencia
     ↓
 cowork/views.py ejecuta la vista asociada
     ↓
-render() carga una plantilla desde cowork/templates/
+render() carga una plantilla desde cowork/templates/cowork/, que extiende cowork/base.html
     ↓
 Django devuelve una respuesta HTTP al navegador
 ```
 
-Si ninguna ruta coincide, Django utiliza `handler404`, ejecuta la vista `error_404` y devuelve `404.html` con estado HTTP 404.
+Si ninguna ruta coincide, Django utiliza `handler404`, ejecuta la vista `error_404` y devuelve `cowork/404.html` con estado HTTP 404.
 
 ## Organización de las rutas
 
@@ -108,6 +108,7 @@ Las dependencias utilizadas están registradas en `requirements.txt`:
 - **Django:** framework principal que recibe las peticiones y relaciona rutas, vistas y plantillas.
 - **asgiref:** dependencia de Django que proporciona compatibilidad con ASGI y ejecución asíncrona.
 - **sqlparse:** dependencia utilizada por Django para analizar y dar formato a instrucciones SQL.
+- **Bootstrap 5.3:** se carga desde jsDelivr en `cowork/base.html` para la grilla, cards, navbar y botones.
 
 ## Archivos excluidos de Git
 

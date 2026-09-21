@@ -1,0 +1,70 @@
+{% extends "cowork/base.html" %}
+
+{% block extra_meta %}
+    <meta name="description" content="Inicio de Plataforma Coworking.">
+{% endblock %}
+
+{% block title %}Inicio | Plataforma Coworking{% endblock %}
+
+{% block navbar %}
+    <nav class="navbar navbar-cowork" aria-label="Navegación principal">
+        <div class="container-lg page-shell d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <a class="navbar-brand mb-0" href="{% url 'bienvenida' %}">Plataforma Coworking</a>
+            <a class="nav-link px-2" href="{% url 'bienvenida' %}">← Volver</a>
+        </div>
+    </nav>
+{% endblock %}
+
+{% block content %}
+    <main id="contenido" class="container-lg page-shell py-3 py-md-4">
+        <section class="py-4 py-md-5" aria-labelledby="inicio-title">
+            <p class="section-label">Inicio</p>
+            <h1 id="inicio-title" class="hero-title">Todo lo necesario, en un solo lugar.</h1>
+            <p class="lead text-brand-muted col-lg-8 px-0 mt-3 mb-0">
+                Esta es la base de una plataforma pensada para simplificar la experiencia
+                de quienes utilizan y administran espacios de coworking.
+            </p>
+        </section>
+
+        <section class="row g-3 g-lg-4" aria-label="Próximas funciones">
+            <div class="col-12 col-sm-6 col-xl-4">
+                <article class="card card-feature h-100 p-3 p-md-4">
+                    <span class="badge-number">01</span>
+                    <h2 class="h5 mt-3">Reservas</h2>
+                    <p class="text-brand-muted mb-0">
+                        Consulta disponibilidad y organiza horarios de manera sencilla.
+                    </p>
+                </article>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-4">
+                <article class="card card-feature h-100 p-3 p-md-4">
+                    <span class="badge-number">02</span>
+                    <h2 class="h5 mt-3">Espacios</h2>
+                    <p class="text-brand-muted mb-0">
+                        Conoce las alternativas y encuentra el lugar que necesitas.
+                    </p>
+                </article>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-4">
+                <article class="card card-feature h-100 p-3 p-md-4">
+                    <span class="badge-number">03</span>
+                    <h2 class="h5 mt-3">Comunidad</h2>
+                    <p class="text-brand-muted mb-0">
+                        Conecta personas, equipos e ideas dentro del mismo entorno.
+                    </p>
+                </article>
+            </div>
+        </section>
+
+        <aside class="alert alert-brand mt-4 mb-0">
+            <strong>Primera versión en desarrollo</strong>
+            <span class="d-block text-brand-muted mt-1">
+                Las funcionalidades se incorporarán progresivamente.
+            </span>
+        </aside>
+
+        <footer class="site-footer border-top mt-4 mt-md-5 pt-3 pt-md-4 pb-4">
+            Plataforma Coworking · Espacios para trabajar, conectar y crear.
+        </footer>
+    </main>
+{% endblock %}

@@ -77,12 +77,13 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = 'same-origin'
 X_FRAME_OPTIONS = 'DENY'
 
-# No third-party scripts, frames, or form targets are allowed.
-# Django admin and the public templates use inline styles, so style-src keeps that exception.
+# Bootstrap 5 se carga desde jsDelivr. El CSS propio de la marca sigue inline en base.html,
+# y el admin de Django también usa estilos inline, por eso style-src mantiene unsafe-inline.
+BOOTSTRAP_CDN = 'https://cdn.jsdelivr.net'
 SECURE_CSP = {
     'default-src': [CSP.SELF],
-    'script-src': [CSP.SELF],
-    'style-src': [CSP.SELF, CSP.UNSAFE_INLINE],
+    'script-src': [CSP.SELF, BOOTSTRAP_CDN],
+    'style-src': [CSP.SELF, CSP.UNSAFE_INLINE, BOOTSTRAP_CDN],
     'img-src': [CSP.SELF, 'data:'],
     'font-src': [CSP.SELF],
     'connect-src': [CSP.SELF],

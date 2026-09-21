@@ -1,0 +1,38 @@
+{% extends "cowork/base.html" %}
+
+{% block extra_meta %}
+    <meta name="robots" content="noindex">
+{% endblock %}
+
+{% block title %}Página no encontrada | Plataforma Coworking{% endblock %}
+
+{% block body_class %}min-vh-100 d-flex align-items-center{% endblock %}
+
+{% block content %}
+    <main id="contenido" class="container-lg page-shell py-4 w-100">
+        <div class="row justify-content-center">
+            <div class="col-12 col-sm-10 col-md-8 col-lg-6">
+                <section class="card card-cowork p-3 p-sm-4 p-md-5">
+                    <p class="error-code">404</p>
+                    <h1 class="hero-title error-title mt-3 mt-md-4 mb-3">
+                        Esta página no está disponible.
+                    </h1>
+                    <p class="text-brand-muted mb-0">
+                        La dirección solicitada no existe o cambió de lugar. Puedes regresar al inicio
+                        para continuar navegando.
+                    </p>
+
+                    {% if request.path %}
+                        <span class="path-chip" title="{{ request.path }}">{{ request.path }}</span>
+                    {% endif %}
+
+                    <div>
+                        <a class="btn btn-primary mt-4 w-100 w-sm-auto" href="{% url 'bienvenida' %}">
+                            Volver al inicio →
+                        </a>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+{% endblock %}
