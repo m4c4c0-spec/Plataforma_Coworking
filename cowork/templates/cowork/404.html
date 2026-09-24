@@ -6,33 +6,48 @@
 
 {% block title %}Página no encontrada | Plataforma Coworking{% endblock %}
 
-{% block body_class %}min-vh-100 d-flex align-items-center{% endblock %}
+{% block body_class %}error-page{% endblock %}
+
+{% block navbar %}
+    <nav class="navbar navbar-cowork error-nav" aria-label="Navegación principal">
+        <div class="container-xl page-shell">
+            <a class="navbar-brand brand-lockup" href="{% url 'bienvenida' %}" aria-label="Plataforma Coworking, inicio">
+                <span class="brand-mark" aria-hidden="true">C</span>
+                <span><span class="brand-prefix">Plataforma </span>Coworking<span class="brand-dot">.</span></span>
+            </a>
+        </div>
+    </nav>
+{% endblock %}
 
 {% block content %}
-    <main id="contenido" class="container-lg page-shell py-4 w-100">
-        <div class="row justify-content-center">
-            <div class="col-12 col-sm-10 col-md-8 col-lg-6">
-                <section class="card card-cowork p-3 p-sm-4 p-md-5">
-                    <p class="error-code">404</p>
-                    <h1 class="hero-title error-title mt-3 mt-md-4 mb-3">
-                        Esta página no está disponible.
-                    </h1>
-                    <p class="text-brand-muted mb-0">
-                        La dirección solicitada no existe o cambió de lugar. Puedes regresar al inicio
-                        para continuar navegando.
-                    </p>
-
-                    {% if request.path %}
-                        <span class="path-chip" title="{{ request.path }}">{{ request.path }}</span>
-                    {% endif %}
-
-                    <div>
-                        <a class="btn btn-primary mt-4 w-100 w-sm-auto" href="{% url 'bienvenida' %}">
-                            Volver al inicio →
-                        </a>
-                    </div>
-                </section>
+    <main id="contenido" class="error-main container-xl page-shell">
+        <div class="error-orb" aria-hidden="true"></div>
+        <section class="error-card">
+            <div class="error-visual" aria-hidden="true">
+                <span class="error-code">404</span>
+                <div class="lost-desk">
+                    <span class="desk-top"></span>
+                    <span class="desk-leg desk-leg-left"></span>
+                    <span class="desk-leg desk-leg-right"></span>
+                    <span class="plant-pot">✦</span>
+                </div>
             </div>
-        </div>
+            <div class="error-copy">
+                <p class="eyebrow"><span></span> Parece que te perdiste</p>
+                <h1>Esta página no está disponible.</h1>
+                <p>La dirección solicitada no existe o cambió de lugar. Regresa a la portada para seguir explorando.</p>
+
+                {% if request.path %}
+                    <span class="path-chip" title="{{ request.path }}">{{ request.path }}</span>
+                {% endif %}
+
+                <div>
+                    <a class="btn btn-primary btn-lg" href="{% url 'bienvenida' %}">
+                        Volver a la portada
+                        <svg class="icon icon-arrow" aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </a>
+                </div>
+            </div>
+        </section>
     </main>
 {% endblock %}

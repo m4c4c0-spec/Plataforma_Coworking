@@ -1,9 +1,10 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#f3f0e9">
+    <meta name="theme-color" content="#173f35">
     <meta name="color-scheme" content="light">
     {% block extra_meta %}{% endblock %}
     <title>{% block title %}Plataforma Coworking{% endblock %}</title>
@@ -13,187 +14,8 @@
         integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
         crossorigin="anonymous"
     >
-    <style>
-        :root {
-            --brand-bg: #f3f0e9;
-            --brand-surface: #fffdf8;
-            --brand-text: #26312c;
-            --brand-muted: #68716d;
-            --brand-primary: #2f6652;
-            --brand-soft: #e3ece7;
-            --brand-border: #ddd8ce;
-            --bs-primary: #2f6652;
-            --bs-primary-rgb: 47, 102, 82;
-            --tap: 2.75rem;
-            --page-pad-x: max(1rem, env(safe-area-inset-left));
-            --page-pad-r: max(1rem, env(safe-area-inset-right));
-        }
-
-        html {
-            -webkit-text-size-adjust: 100%;
-        }
-
-        body {
-            background: var(--brand-bg);
-            color: var(--brand-text);
-            padding-bottom: env(safe-area-inset-bottom);
-        }
-
-        .skip-link:focus {
-            position: fixed;
-            z-index: 1080;
-            top: 0.75rem;
-            left: 0.75rem;
-        }
-
-        .section-label {
-            margin: 0 0 0.85rem;
-            color: var(--brand-primary);
-            font-size: 0.72rem;
-            font-weight: 700;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-        }
-
-        .hero-title {
-            max-width: 18ch;
-            font-family: Georgia, serif;
-            font-size: clamp(1.75rem, 1.1rem + 4.5vw, 4.5rem);
-            font-weight: 400;
-            letter-spacing: -0.05em;
-            line-height: 1.05;
-            overflow-wrap: break-word;
-        }
-
-        .card-cowork {
-            border: 1px solid var(--brand-border);
-            border-top: 6px solid var(--brand-primary);
-            border-radius: 16px;
-            background: var(--brand-surface);
-            box-shadow: 0 16px 40px rgba(38, 49, 44, 0.08);
-        }
-
-        .card-feature {
-            border: 1px solid var(--brand-border);
-            border-radius: 14px;
-            background: var(--brand-surface);
-        }
-
-        .badge-number {
-            display: inline-block;
-            align-self: start;
-            padding: 6px 9px;
-            border-radius: 8px;
-            color: var(--brand-primary);
-            background: var(--brand-soft);
-            font-size: 0.78rem;
-            font-weight: 700;
-        }
-
-        .btn-primary {
-            --bs-btn-bg: #2f6652;
-            --bs-btn-border-color: #2f6652;
-            --bs-btn-hover-bg: #244f3f;
-            --bs-btn-hover-border-color: #244f3f;
-            --bs-btn-active-bg: #244f3f;
-            --bs-btn-active-border-color: #244f3f;
-            min-height: var(--tap);
-            padding: 0.75rem 1.2rem;
-            border-radius: 10px;
-            font-weight: 700;
-        }
-
-        .navbar-cowork {
-            padding-top: max(0.35rem, env(safe-area-inset-top));
-            border-bottom: 1px solid var(--brand-border);
-            background: var(--brand-bg);
-        }
-
-        .navbar-cowork .navbar-brand,
-        .navbar-cowork .nav-link {
-            display: inline-flex;
-            align-items: center;
-            min-height: var(--tap);
-            color: var(--brand-text);
-            font-weight: 700;
-        }
-
-        .navbar-cowork .nav-link {
-            color: var(--brand-primary);
-        }
-
-        .alert-brand {
-            color: var(--brand-text);
-            background: var(--brand-soft);
-            border: 0;
-            border-left: 5px solid var(--brand-primary);
-            border-radius: 10px;
-        }
-
-        .error-code {
-            margin: 0;
-            color: var(--brand-primary);
-            font-family: Georgia, serif;
-            font-size: clamp(3.5rem, 18vw, 8rem);
-            font-weight: 700;
-            letter-spacing: -0.06em;
-            line-height: 0.9;
-        }
-
-        .path-chip {
-            display: inline-block;
-            align-self: start;
-            max-width: 100%;
-            margin-top: 1rem;
-            padding: 7px 10px;
-            overflow: hidden;
-            border: 1px solid var(--brand-border);
-            border-radius: 7px;
-            color: var(--brand-muted);
-            font-family: ui-monospace, monospace;
-            font-size: 0.8rem;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        .text-brand-muted {
-            color: var(--brand-muted);
-        }
-
-        .error-title {
-            max-width: none;
-            font-size: clamp(1.6rem, 5vw, 3rem);
-        }
-
-        .site-footer {
-            color: var(--brand-muted);
-            font-size: 0.82rem;
-        }
-
-        .page-shell {
-            padding-right: var(--page-pad-r);
-            padding-left: var(--page-pad-x);
-        }
-
-        @media (min-width: 768px) {
-            .card-cowork {
-                border-radius: 18px;
-            }
-
-            .section-label {
-                font-size: 0.78rem;
-            }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            *,
-            *::before,
-            *::after {
-                transition-duration: 0.01ms !important;
-                animation-duration: 0.01ms !important;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="{% static 'cowork/css/styles.css' %}">
+    {% block extra_css %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
     <a class="skip-link btn btn-primary visually-hidden-focusable" href="#contenido">
@@ -206,5 +28,6 @@
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"
     ></script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

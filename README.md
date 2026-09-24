@@ -108,7 +108,19 @@ Las dependencias utilizadas están registradas en `requirements.txt`:
 - **Django:** framework principal que recibe las peticiones y relaciona rutas, vistas y plantillas.
 - **asgiref:** dependencia de Django que proporciona compatibilidad con ASGI y ejecución asíncrona.
 - **sqlparse:** dependencia utilizada por Django para analizar y dar formato a instrucciones SQL.
-- **Bootstrap 5.3:** se carga desde jsDelivr en `cowork/base.html` para la grilla, cards, navbar y botones.
+- **Bootstrap 5.3:** se carga desde jsDelivr en `cowork/base.html` y aporta la grilla responsive y utilidades de interfaz.
+
+## Frontend y sistema visual
+
+El frontend utiliza **plantillas Django + Bootstrap 5.3 + CSS propio**. Esta combinación es la más adecuada para la etapa actual porque no requiere Node.js, un compilador ni comandos adicionales: basta con iniciar Django para trabajar en las vistas.
+
+- `cowork/templates/cowork/base.html`: estructura compartida y carga de Bootstrap/CSS.
+- `cowork/templates/cowork/bienvenida.html`: portada y presentación de la propuesta de valor.
+- `cowork/templates/cowork/inicio.html`: vista general de la plataforma.
+- `cowork/templates/cowork/404.html`: página de error consistente con la marca.
+- `cowork/static/cowork/css/styles.css`: colores, tipografía, componentes y reglas responsive.
+
+Se recomienda mantener esta base hasta que la aplicación necesite una interfaz altamente interactiva. **Tailwind CSS** sería útil si el equipo adoptara Node.js y un flujo de compilación; **React o Vue** solo se justificarían si el producto evolucionara hacia una aplicación con mucho estado en el navegador. Para las vistas renderizadas por Django, Bootstrap más CSS propio ofrece menor complejidad y mantenimiento directo.
 
 ## Archivos excluidos de Git
 

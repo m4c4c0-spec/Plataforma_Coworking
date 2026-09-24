@@ -1,8 +1,11 @@
 from pathlib import Path
 
 from django.conf import settings
-from django.test import SimpleTestCase, override_settings
+from django.db import IntegrityError
+from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
+
+from cowork.models import Sede, TipoEspacio
 
 
 class HostPermitidoTests(SimpleTestCase):
@@ -89,3 +92,21 @@ class PoliticaCspTests(HostPermitidoTests):
         self.assertIn('https://cdn.jsdelivr.net', csp)
         self.assertIn("'unsafe-inline'", csp)
         self.assertContains(response, 'rel="stylesheet"')
+
+
+class CatalogoInicialTests(TestCase):
+    def test_crear_sede(self):
+        sede = Sede.objects.create(
+            nombre='Centro',
+            direccion='Calle Principal 100',
+            ciudad='Asunción',
+        )
+
+        self.assertTrue(sede.activa)
+        self.assertEqual(str(sede), 'Centro')
+
+    def test_tipo_espacio_nombre_es_unico(self):
+        TipoEspacio.objects.create(nombre='Sala de reuniones')
+
+        with self.assertRaises(IntegrityError):
+            TipoEspacio.objects.create(nombre='Sala de reuniones')

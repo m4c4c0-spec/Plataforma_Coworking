@@ -1,70 +1,156 @@
 {% extends "cowork/base.html" %}
 
 {% block extra_meta %}
-    <meta name="description" content="Inicio de Plataforma Coworking.">
+    <meta name="description" content="Panel principal de Plataforma Coworking para organizar espacios, reservas y comunidad.">
 {% endblock %}
 
 {% block title %}Inicio | Plataforma Coworking{% endblock %}
 
+{% block body_class %}dashboard-page{% endblock %}
+
 {% block navbar %}
-    <nav class="navbar navbar-cowork" aria-label="Navegación principal">
-        <div class="container-lg page-shell d-flex flex-wrap align-items-center justify-content-between gap-2">
-            <a class="navbar-brand mb-0" href="{% url 'bienvenida' %}">Plataforma Coworking</a>
-            <a class="nav-link px-2" href="{% url 'bienvenida' %}">← Volver</a>
+    <nav class="navbar navbar-cowork dashboard-nav" aria-label="Navegación principal">
+        <div class="container-xl page-shell d-flex align-items-center justify-content-between">
+            <a class="navbar-brand brand-lockup" href="{% url 'bienvenida' %}" aria-label="Plataforma Coworking, portada">
+                <span class="brand-mark" aria-hidden="true">C</span>
+                <span><span class="brand-prefix">Plataforma </span>Coworking<span class="brand-dot">.</span></span>
+            </a>
+            <div class="d-flex align-items-center gap-2 gap-sm-3">
+                <span class="nav-status d-none d-sm-inline-flex"><span></span> Versión inicial</span>
+                <a class="btn btn-nav btn-nav-outline" href="{% url 'bienvenida' %}">
+                    <svg class="icon d-none d-sm-inline" aria-hidden="true" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+                    Portada
+                </a>
+            </div>
         </div>
     </nav>
 {% endblock %}
 
 {% block content %}
-    <main id="contenido" class="container-lg page-shell py-3 py-md-4">
-        <section class="py-4 py-md-5" aria-labelledby="inicio-title">
-            <p class="section-label">Inicio</p>
-            <h1 id="inicio-title" class="hero-title">Todo lo necesario, en un solo lugar.</h1>
-            <p class="lead text-brand-muted col-lg-8 px-0 mt-3 mb-0">
-                Esta es la base de una plataforma pensada para simplificar la experiencia
-                de quienes utilizan y administran espacios de coworking.
-            </p>
-        </section>
+    <main id="contenido" class="dashboard-main">
+        <div class="container-xl page-shell py-4 py-lg-5">
+            <header class="dashboard-heading row align-items-end gy-3 mb-4 mb-lg-5">
+                <div class="col-lg-8">
+                    <p class="eyebrow"><span></span> Vista general</p>
+                    <h1 class="dashboard-title mb-3">Todo lo necesario, en un solo lugar.</h1>
+                    <p class="dashboard-intro mb-0">Organiza tu jornada, encuentra el espacio ideal y conecta con tu comunidad.</p>
+                </div>
+                <div class="col-lg-4 d-lg-flex justify-content-lg-end">
+                    <div class="date-card">
+                        <span class="date-day">21</span>
+                        <span><strong>Septiembre</strong><small>Lunes · Santiago</small></span>
+                    </div>
+                </div>
+            </header>
 
-        <section class="row g-3 g-lg-4" aria-label="Próximas funciones">
-            <div class="col-12 col-sm-6 col-xl-4">
-                <article class="card card-feature h-100 p-3 p-md-4">
-                    <span class="badge-number">01</span>
-                    <h2 class="h5 mt-3">Reservas</h2>
-                    <p class="text-brand-muted mb-0">
-                        Consulta disponibilidad y organiza horarios de manera sencilla.
-                    </p>
-                </article>
-            </div>
-            <div class="col-12 col-sm-6 col-xl-4">
-                <article class="card card-feature h-100 p-3 p-md-4">
-                    <span class="badge-number">02</span>
-                    <h2 class="h5 mt-3">Espacios</h2>
-                    <p class="text-brand-muted mb-0">
-                        Conoce las alternativas y encuentra el lugar que necesitas.
-                    </p>
-                </article>
-            </div>
-            <div class="col-12 col-sm-6 col-xl-4">
-                <article class="card card-feature h-100 p-3 p-md-4">
-                    <span class="badge-number">03</span>
-                    <h2 class="h5 mt-3">Comunidad</h2>
-                    <p class="text-brand-muted mb-0">
-                        Conecta personas, equipos e ideas dentro del mismo entorno.
-                    </p>
-                </article>
-            </div>
-        </section>
+            <section class="row g-3 mb-3 mb-lg-4" aria-label="Resumen de actividad">
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <article class="stat-card h-100">
+                        <span class="stat-icon stat-icon-primary">
+                            <svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+                        </span>
+                        <span><small>Próxima reserva</small><strong>Sin reservas aún</strong></span>
+                        <span class="stat-arrow" aria-hidden="true">→</span>
+                    </article>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-4">
+                    <article class="stat-card h-100">
+                        <span class="stat-icon">
+                            <svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+                        </span>
+                        <span><small>Sede habitual</small><strong>Por seleccionar</strong></span>
+                        <span class="stat-arrow" aria-hidden="true">→</span>
+                    </article>
+                </div>
+                <div class="col-12 col-lg-4">
+                    <article class="stat-card h-100 stat-card-dark">
+                        <span class="stat-icon">
+                            <svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M16 4a4 4 0 0 1 0 8M17 14a7 7 0 0 1 5 7"/></svg>
+                        </span>
+                        <span><small>Comunidad</small><strong>Próximamente</strong></span>
+                        <span class="stat-arrow" aria-hidden="true">→</span>
+                    </article>
+                </div>
+            </section>
 
-        <aside class="alert alert-brand mt-4 mb-0">
-            <strong>Primera versión en desarrollo</strong>
-            <span class="d-block text-brand-muted mt-1">
-                Las funcionalidades se incorporarán progresivamente.
-            </span>
-        </aside>
+            <div class="row g-3 g-lg-4">
+                <div class="col-12 col-lg-8">
+                    <section class="content-panel h-100" aria-labelledby="actions-title">
+                        <div class="panel-heading">
+                            <div>
+                                <p class="eyebrow mb-2"><span></span> Accesos rápidos</p>
+                                <h2 id="actions-title">¿Qué necesitas hoy?</h2>
+                            </div>
+                            <span class="panel-note">3 opciones</span>
+                        </div>
 
-        <footer class="site-footer border-top mt-4 mt-md-5 pt-3 pt-md-4 pb-4">
-            Plataforma Coworking · Espacios para trabajar, conectar y crear.
+                        <div class="action-list">
+                            <article class="action-card action-card-highlight">
+                                <span class="action-number">01</span>
+                                <div class="action-icon">
+                                    <svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>
+                                </div>
+                                <div class="action-copy">
+                                    <h3>Nueva reserva</h3>
+                                    <p>Consulta disponibilidad y organiza tu próxima jornada.</p>
+                                </div>
+                                <span class="action-arrow" aria-hidden="true">↗</span>
+                            </article>
+                            <article class="action-card">
+                                <span class="action-number">02</span>
+                                <div class="action-icon">
+                                    <svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M3 21h18M5 21V5h14v16M9 9h2M13 9h2M9 13h2M13 13h2M10 21v-4h4v4"/></svg>
+                                </div>
+                                <div class="action-copy">
+                                    <h3>Explorar espacios</h3>
+                                    <p>Encuentra escritorios, oficinas y salas para cada ocasión.</p>
+                                </div>
+                                <span class="action-arrow" aria-hidden="true">↗</span>
+                            </article>
+                            <article class="action-card">
+                                <span class="action-number">03</span>
+                                <div class="action-icon">
+                                    <svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M16 4a4 4 0 0 1 0 8M17 14a7 7 0 0 1 5 7"/></svg>
+                                </div>
+                                <div class="action-copy">
+                                    <h3>Descubrir comunidad</h3>
+                                    <p>Conecta con personas, equipos y nuevas oportunidades.</p>
+                                </div>
+                                <span class="action-arrow" aria-hidden="true">↗</span>
+                            </article>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="col-12 col-lg-4">
+                    <aside class="side-stack">
+                        <section class="progress-card" aria-labelledby="progress-title">
+                            <span class="progress-label">Primeros pasos</span>
+                            <h2 id="progress-title">Prepara tu experiencia</h2>
+                            <p>Completa tu información para que podamos recomendarte los mejores espacios.</p>
+                            <div class="progress-track" role="progressbar" aria-label="Progreso del perfil" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+                                <span></span>
+                            </div>
+                            <div class="d-flex justify-content-between progress-meta"><span>Perfil básico</span><strong>25%</strong></div>
+                        </section>
+
+                        <section class="notice-card" aria-label="Estado de la plataforma">
+                            <span class="notice-icon" aria-hidden="true">✦</span>
+                            <div>
+                                <strong>Estamos construyendo la plataforma</strong>
+                                <p>Las funciones de reserva, espacios y comunidad se incorporarán progresivamente.</p>
+                            </div>
+                        </section>
+                    </aside>
+                </div>
+            </div>
+        </div>
+
+        <footer class="site-footer dashboard-footer">
+            <div class="container-xl page-shell d-flex flex-column flex-sm-row justify-content-between gap-2 py-4">
+                <span>Plataforma Coworking · Espacios para trabajar, conectar y crear.</span>
+                <a href="{% url 'bienvenida' %}">Volver a la portada</a>
+            </div>
         </footer>
     </main>
 {% endblock %}

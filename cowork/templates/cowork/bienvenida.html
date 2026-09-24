@@ -1,40 +1,175 @@
 {% extends "cowork/base.html" %}
 
 {% block extra_meta %}
-    <meta name="description" content="Bienvenida a Plataforma Coworking.">
+    <meta name="description" content="Encuentra, reserva y disfruta espacios de coworking preparados para hacer crecer tus ideas.">
 {% endblock %}
 
 {% block title %}Bienvenida | Plataforma Coworking{% endblock %}
 
-{% block content %}
-    <main id="contenido" class="container-lg page-shell py-4 py-md-5 py-xl-5">
-        <div class="row justify-content-center">
-            <div class="col-12 col-sm-11 col-md-10 col-lg-8 col-xxl-7">
-                <section class="card card-cowork p-3 p-sm-4 p-md-5" aria-labelledby="welcome-title">
-                    <p class="section-label">Plataforma Coworking</p>
-                    <h1 id="welcome-title" class="hero-title mb-3 mb-md-4">Un espacio para trabajar mejor.</h1>
-                    <p class="lead text-brand-muted mb-0">
-                        Estamos construyendo una plataforma para organizar espacios, reservas y comunidad
-                        de una manera clara y sencilla.
-                    </p>
+{% block body_class %}landing-page{% endblock %}
 
-                    <ul class="mt-4 mb-0 ps-3">
-                        <li class="mb-2">Encuentra espacios disponibles.</li>
-                        <li class="mb-2">Organiza tu jornada de trabajo.</li>
-                        <li>Conecta con la comunidad.</li>
-                    </ul>
-
-                    <div>
-                        <a class="btn btn-primary mt-4 w-100 w-sm-auto" href="{% url 'inicio' %}">
-                            Entrar a la plataforma →
-                        </a>
-                    </div>
-                </section>
-
-                <footer class="site-footer text-center py-4">
-                    Plataforma Coworking · Espacios para trabajar, conectar y crear.
-                </footer>
+{% block navbar %}
+    <nav class="navbar navbar-expand-md navbar-cowork" aria-label="Navegación principal">
+        <div class="container-xl page-shell">
+            <a class="navbar-brand brand-lockup" href="{% url 'bienvenida' %}" aria-label="Plataforma Coworking, inicio">
+                <span class="brand-mark" aria-hidden="true">C</span>
+                <span><span class="brand-prefix">Plataforma </span>Coworking<span class="brand-dot">.</span></span>
+            </a>
+            <div class="d-flex align-items-center gap-2 gap-sm-3">
+                <a class="nav-link d-none d-md-inline-flex" href="#beneficios">Cómo funciona</a>
+                <a class="btn btn-nav" href="{% url 'inicio' %}">Explorar espacios</a>
             </div>
         </div>
+    </nav>
+{% endblock %}
+
+{% block content %}
+    <main id="contenido">
+        <section class="hero-section overflow-hidden">
+            <div class="container-xl page-shell position-relative">
+                <div class="hero-orb hero-orb-one" aria-hidden="true"></div>
+                <div class="hero-orb hero-orb-two" aria-hidden="true"></div>
+                <div class="row align-items-center gy-5 gx-xl-5 py-5 hero-row">
+                    <div class="col-12 col-lg-6 position-relative z-1">
+                        <p class="eyebrow"><span></span> Tu espacio, a tu ritmo</p>
+                        <h1 id="welcome-title" class="display-title mb-4">Un espacio para trabajar mejor.</h1>
+                        <p class="hero-copy mb-4 mb-lg-5">
+                            Reserva escritorios, salas y oficinas en minutos. Todo lo que tu jornada
+                            necesita, en un lugar pensado para conectar y crear.
+                        </p>
+                        <div class="d-flex flex-column flex-sm-row gap-3 align-items-sm-center">
+                            <a class="btn btn-primary btn-lg" href="{% url 'inicio' %}">
+                                Encontrar mi espacio
+                                <svg class="icon icon-arrow" aria-hidden="true" viewBox="0 0 24 24">
+                                    <path d="M5 12h14M13 6l6 6-6 6"/>
+                                </svg>
+                            </a>
+                            <a class="text-link" href="#beneficios">Conoce la experiencia</a>
+                        </div>
+                        <div class="hero-proof mt-5" aria-label="Ventajas principales">
+                            <div><strong>Flexible</strong><span>Reserva cuando quieras</span></div>
+                            <div><strong>Simple</strong><span>Todo desde un lugar</span></div>
+                            <div><strong>Cercano</strong><span>Una comunidad activa</span></div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-6 position-relative z-1">
+                        <div class="product-preview" aria-label="Vista previa de disponibilidad de espacios">
+                            <div class="preview-header">
+                                <div>
+                                    <span class="preview-kicker">Buenos días</span>
+                                    <h2>¿Dónde trabajamos hoy?</h2>
+                                </div>
+                                <span class="avatar" aria-hidden="true">CM</span>
+                            </div>
+                            <div class="location-pill">
+                                <svg class="icon" aria-hidden="true" viewBox="0 0 24 24">
+                                    <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>
+                                </svg>
+                                <span><small>Sede seleccionada</small>Centro · Santiago</span>
+                                <span class="ms-auto">⌄</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-end mt-4 mb-3">
+                                <div>
+                                    <span class="preview-kicker">Disponibilidad</span>
+                                    <h3>Hoy, 21 de septiembre</h3>
+                                </div>
+                                <span class="availability-dot">En vivo</span>
+                            </div>
+                            <div class="workspace-list">
+                                <article class="workspace-row selected">
+                                    <span class="workspace-icon">
+                                        <svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M4 12h16v7H4zM7 12V8h10v4M7 19v2M17 19v2"/></svg>
+                                    </span>
+                                    <span class="workspace-name"><strong>Escritorio flexible</strong><small>Zona norte · Piso 2</small></span>
+                                    <span class="workspace-time"><strong>8</strong><small>libres</small></span>
+                                </article>
+                                <article class="workspace-row">
+                                    <span class="workspace-icon">
+                                        <svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h16v14H4zM8 9h8M8 13h5"/></svg>
+                                    </span>
+                                    <span class="workspace-name"><strong>Sala Horizonte</strong><small>Hasta 6 personas</small></span>
+                                    <span class="workspace-time"><strong>10:30</strong><small>próxima</small></span>
+                                </article>
+                            </div>
+                            <div class="booking-toast">
+                                <span class="toast-check" aria-hidden="true">✓</span>
+                                <span><strong>Reserva confirmada</strong><small>Tu espacio te está esperando</small></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="beneficios" class="benefits-section py-5" aria-labelledby="benefits-title">
+            <div class="container-xl page-shell py-lg-5">
+                <div class="section-heading row align-items-end gy-3 mb-4 mb-lg-5">
+                    <div class="col-lg-7">
+                        <p class="eyebrow"><span></span> Menos gestión, más foco</p>
+                        <h2 id="benefits-title" class="section-title mb-0">Tu jornada comienza sin complicaciones.</h2>
+                    </div>
+                    <p class="col-lg-4 offset-lg-1 section-copy mb-0">
+                        Diseñamos cada paso para que encuentres lo que necesitas y vuelvas a lo importante: tu trabajo.
+                    </p>
+                </div>
+
+                <div class="row g-3 g-lg-4">
+                    <div class="col-12 col-md-4">
+                        <article class="feature-card h-100">
+                            <div class="feature-icon">
+                                <svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>
+                            </div>
+                            <span class="feature-number">01</span>
+                            <h3>Reserva en segundos</h3>
+                            <p>Consulta horarios y asegura tu espacio sin llamadas ni esperas.</p>
+                        </article>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <article class="feature-card h-100 feature-card-accent">
+                            <div class="feature-icon">
+                                <svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><path d="M4 4h16v16H4zM4 9h16M9 9v11"/><path d="m13 14 2 2 4-4"/></svg>
+                            </div>
+                            <span class="feature-number">02</span>
+                            <h3>El espacio correcto</h3>
+                            <p>Desde una mesa tranquila hasta una sala para reunir a todo tu equipo.</p>
+                        </article>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <article class="feature-card h-100">
+                            <div class="feature-icon">
+                                <svg class="icon" aria-hidden="true" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M16 4a4 4 0 0 1 0 8M17 14a7 7 0 0 1 5 7"/></svg>
+                            </div>
+                            <span class="feature-number">03</span>
+                            <h3>Comunidad que suma</h3>
+                            <p>Conoce profesionales, comparte ideas y crea nuevas oportunidades.</p>
+                        </article>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="cta-section">
+            <div class="container-xl page-shell py-5">
+                <div class="cta-panel">
+                    <div>
+                        <p class="eyebrow eyebrow-light"><span></span> Empieza hoy</p>
+                        <h2>Tu próxima gran idea necesita un buen lugar.</h2>
+                    </div>
+                    <a class="btn btn-light btn-lg" href="{% url 'inicio' %}">
+                        Ver espacios disponibles
+                        <svg class="icon icon-arrow" aria-hidden="true" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <footer class="site-footer">
+            <div class="container-xl page-shell d-flex flex-column flex-sm-row justify-content-between gap-3 py-4">
+                <span class="brand-lockup footer-brand"><span class="brand-mark" aria-hidden="true">C</span> Plataforma Coworking<span class="brand-dot">.</span></span>
+                <span>Espacios para trabajar, conectar y crear.</span>
+                <span>© 2026 Plataforma Coworking</span>
+            </div>
+        </footer>
     </main>
 {% endblock %}

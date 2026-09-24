@@ -3,7 +3,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path
 
-# Django usa esta función cuando ninguna ruta coincide. No es un endpoint adicional.
+# Django usa esta función cuando ninguna ruta coincide
 handler404 = views.error_404
 
 urlpatterns = [
