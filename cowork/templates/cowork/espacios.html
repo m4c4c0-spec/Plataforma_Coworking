@@ -1,0 +1,25 @@
+{% extends "cowork/gestion_base.html" %}
+{% block gestion_title %}Espacios{% endblock %}
+{% block gestion_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h2">Espacios</h1>
+    {% if es_admin %}<a class="btn btn-primary" href="{% url 'espacio_crear' %}">Crear espacio</a>{% endif %}
+</div>
+<section class="row g-3">
+    {% for espacio in espacios %}
+    <div class="col-md-6 col-xl-4"><article class="content-panel h-100">
+        <h2 class="h4">{{ espacio.nombre }}</h2>
+        <p>{{ espacio.sede }} · {{ espacio.tipo }} · {{ espacio.capacidad }} personas</p>
+        <p>{{ espacio.descripcion_publica|linebreaksbr }}</p>
+        <p><strong>{{ espacio.get_estado_display }}</strong></p>
+        {% if es_admin %}
+            {% if espacio.observaciones_privadas %}<p><strong>Observaciones privadas:</strong> {{ espacio.observaciones_privadas|linebreaksbr }}</p>{% endif %}
+            <a class="btn btn-sm btn-outline-secondary" href="{% url 'espacio_editar' espacio.pk %}">Editar</a>
+            {% if espacio.estado != 'inactivo' %}<a class="btn btn-sm btn-outline-danger" href="{% url 'espacio_desactivar' espacio.pk %}">Inactivar</a>{% endif %}
+        {% else %}
+            <a class="btn btn-primary" href="{% url 'reserva_crear' %}">Crear reserva</a>
+        {% endif %}
+    </article></div>
+    {% empty %}<p>No hay espacios disponibles. Administración puede configurar sedes y tipos en gestión interna.</p>{% endfor %}
+</section>
+{% endblock %}

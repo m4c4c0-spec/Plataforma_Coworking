@@ -1,0 +1,25 @@
+{% extends "cowork/base.html" %}
+
+{% block title %}{% block gestion_title %}Gestión{% endblock %} | Plataforma Coworking{% endblock %}
+{% block navbar %}
+<nav class="navbar navbar-cowork dashboard-nav" aria-label="Navegación principal">
+    <div class="container-xl page-shell d-flex flex-wrap align-items-center gap-3">
+        <a class="navbar-brand" href="{% url 'inicio' %}">Plataforma Coworking</a>
+        <a href="{% url 'espacios' %}">Espacios</a>
+        <a href="{% url 'reservas' %}">Reservas</a>
+        {% if es_admin %}<a href="{% url 'usuarios' %}">Usuarios</a>{% endif %}
+        <span class="ms-auto">{{ actor.nombre }}</span>
+        <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}<button class="btn btn-outline-secondary btn-sm" type="submit">Salir</button>
+        </form>
+    </div>
+</nav>
+{% endblock %}
+{% block content %}
+<main id="contenido" class="container-xl page-shell py-4 py-lg-5">
+    {% for message in messages %}
+        <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-success{% endif %}" role="alert">{{ message }}</div>
+    {% endfor %}
+    {% block gestion_content %}{% endblock %}
+</main>
+{% endblock %}

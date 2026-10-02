@@ -1,0 +1,14 @@
+{% extends "cowork/gestion_base.html" %}
+{% block gestion_title %}{{ titulo }}{% endblock %}
+{% block gestion_content %}
+<section class="content-panel mx-auto" style="max-width: 760px">
+    <h1 class="h3 mb-3">{{ titulo }}</h1>
+    <p><strong>{{ objeto }}</strong></p>
+    <p>{{ descripcion }}</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Confirmar</button>
+        <a class="btn btn-outline-secondary" href="{% url volver %}">Volver</a>
+    </form>
+</section>
+{% endblock %}

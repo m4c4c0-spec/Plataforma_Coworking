@@ -1,0 +1,16 @@
+{% extends "cowork/base.html" %}
+{% block title %}Ingresar | Plataforma Coworking{% endblock %}
+{% block content %}
+<main id="contenido" class="container py-5">
+    <div class="row justify-content-center"><section class="col-md-6 col-lg-4 content-panel">
+        <h1 class="h3 mb-4">Ingresar a la plataforma</h1>
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+            <button class="btn btn-primary" type="submit">Ingresar</button>
+            <a class="btn btn-outline-secondary" href="{% url 'inicio' %}">Volver</a>
+        </form>
+    </section></div>
+</main>
+{% endblock %}

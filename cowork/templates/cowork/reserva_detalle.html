@@ -1,0 +1,38 @@
+{% extends "cowork/gestion_base.html" %}
+{% block gestion_title %}Reserva {{ reserva.pk }}{% endblock %}
+{% block gestion_content %}
+<section class="content-panel mb-4">
+    <h1 class="h3 mb-3">Reserva #{{ reserva.pk }}</h1>
+    <dl class="row">
+        <dt class="col-sm-3">Usuario</dt><dd class="col-sm-9">{{ reserva.usuario }}</dd>
+        <dt class="col-sm-3">Espacio</dt><dd class="col-sm-9">{{ reserva.espacio }}</dd>
+        <dt class="col-sm-3">Inicio</dt><dd class="col-sm-9">{{ reserva.inicio|date:"d/m/Y H:i" }}</dd>
+        <dt class="col-sm-3">Fin</dt><dd class="col-sm-9">{{ reserva.fin|date:"d/m/Y H:i" }}</dd>
+        <dt class="col-sm-3">Personas</dt><dd class="col-sm-9">{{ reserva.cantidad_personas }}</dd>
+        <dt class="col-sm-3">Estado</dt><dd class="col-sm-9">{{ reserva.get_estado_display }}</dd>
+        <dt class="col-sm-3">Observaciones</dt><dd class="col-sm-9">{{ reserva.observaciones|default:"Sin observaciones"|linebreaksbr }}</dd>
+        {% if reserva.motivo_cancelacion %}<dt class="col-sm-3">Cancelación</dt><dd class="col-sm-9">{{ reserva.motivo_cancelacion }}</dd>{% endif %}
+    </dl>
+    <div class="d-flex flex-wrap gap-2">
+        {% if reserva.estado == 'pendiente' %}
+            <a class="btn btn-outline-secondary" href="{% url 'reserva_editar' reserva.pk %}">Editar</a>
+            {% if es_admin %}<form method="post" action="{% url 'reserva_confirmar' reserva.pk %}">{% csrf_token %}<button class="btn btn-primary" type="submit">Confirmar</button></form>{% endif %}
+        {% endif %}
+        {% if reserva.estado == 'pendiente' or reserva.estado == 'confirmada' %}
+            <a class="btn btn-outline-danger" href="{% url 'reserva_cancelar' reserva.pk %}">Cancelar reserva</a>
+        {% endif %}
+        {% if es_admin and reserva.estado == 'confirmada' %}
+            <form method="post" action="{% url 'reserva_finalizar' reserva.pk %}">{% csrf_token %}<button class="btn btn-outline-primary" type="submit">Finalizar</button></form>
+        {% endif %}
+        <a class="btn btn-outline-secondary" href="{% url 'reservas' %}">Volver</a>
+    </div>
+</section>
+<section class="content-panel">
+    <h2 class="h4">Historial de estados</h2>
+    <ul class="list-group list-group-flush">
+        {% for cambio in historial %}
+            <li class="list-group-item">{{ cambio.fecha_cambio|date:"d/m/Y H:i" }} · {{ cambio.consultarDetalle }} · {{ cambio.responsable|default:"Sistema" }}</li>
+        {% empty %}<li class="list-group-item">Sin cambios registrados.</li>{% endfor %}
+    </ul>
+</section>
+{% endblock %}
