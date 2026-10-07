@@ -6,13 +6,61 @@ Plataforma de trabajo compartido orientada a organizar espacios, reservas y comu
 
 - Python instalado.
 - Git instalado.
-- Windows 10 u 11.
+- Fedora Linux o Windows 10/11.
+- La versión de Python debe ser compatible con Django 6.1 (Python 3.12 o superior).
 
 Para comprobar que Python está disponible:
 
 ```powershell
 py --version
 ```
+
+## Instalación y sesión de trabajo en Fedora Linux
+
+Instala Python, pip y Git si todavía no están disponibles:
+
+```bash
+sudo dnf install python3 python3-pip git
+python3 --version
+```
+
+En Bash, entra en la raíz del proyecto (la carpeta que contiene `manage.py`):
+
+```bash
+cd /ruta/al/Plataforma_Coworking
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python manage.py migrate
+```
+
+Si `.venv` ya existe y fue creado en este equipo con una versión compatible de Python, omite su creación. Un ambiente virtual de Windows no se puede reutilizar en Linux.
+
+Para iniciar cada nueva sesión de desarrollo:
+
+```bash
+cd /ruta/al/Plataforma_Coworking
+source .venv/bin/activate
+python manage.py runserver
+```
+
+Abre <http://127.0.0.1:8000/>. El proyecto mantiene `DEBUG=False` y su comando `runserver` sirve los archivos estáticos durante el desarrollo. Bootstrap está incluido en el repositorio, por lo que el diseño funciona sin conexión a un CDN. No necesitas configurar `DJANGO_DEBUG`.
+
+Para crear una cuenta administradora, con el ambiente activado:
+
+```bash
+python manage.py createsuperuser
+```
+
+Detén el servidor con `Ctrl+C` y cierra la sesión del ambiente con:
+
+```bash
+deactivate
+```
+
+Para comprobar la página 404 personalizada, visita <http://127.0.0.1:8000/ruta-inexistente/>. Si el servidor estaba abierto antes de actualizar el proyecto, reinícialo con `Ctrl+C` y `python manage.py runserver`, y recarga el navegador con `Ctrl+Shift+R`.
+
+El servicio de archivos estáticos de `runserver` es solo para desarrollo y puede desactivarse con `--nostatic`. En producción, los archivos estáticos deben servirse mediante la infraestructura del despliegue.
 
 ## Instalación en Windows
 
@@ -143,6 +191,8 @@ En Django Admin, los catálogos Sede y TipoEspacio se pueden gestionar. Usuario,
 
 ### Migraciones y datos existentes
 
+La migración `0004_interaccion_del_usuario` crea los perfiles, el historial de reservas y los eventos de auditoría con sus relaciones incluidas. Reemplaza a `0004_modelos_diagrama`: Django reconoce las bases que ya aplicaron ese nombre, sin volver a crear tablas ni requerir borrar la base de datos. El modelo de auditoría mantiene el nombre `EventoAuditoria`.
+
 Las migraciones nuevas renombran `Espacio.descripcion` a `descripcion_publica` y `Reserva.creada_en` a `fecha_creacion`, conservando sus valores. Los espacios antiguos con `activo=False` quedan `inactivos`. Las reservas existentes conservan sus identificadores, sus estados y sus referencias, y reciben un registro inicial del historial con responsable desconocido.
 
 Las cuentas existentes reciben un perfil de usuario. Si una cuenta carece de correo o comparte el mismo correo con otra, su perfil recibe un correo temporal único terminado en `@example.invalid`; el administrador debe corregirlo. El correo de la cuenta original se conserva durante la migración.
@@ -196,7 +246,7 @@ Las dependencias utilizadas están registradas en `requirements.txt`:
 - **Django:** framework principal que recibe las peticiones y relaciona rutas, vistas y plantillas.
 - **asgiref:** dependencia de Django que proporciona compatibilidad con ASGI y ejecución asíncrona.
 - **sqlparse:** dependencia utilizada por Django para analizar y dar formato a instrucciones SQL.
-- **Bootstrap 5.3:** se carga desde jsDelivr en `cowork/base.html` y aporta la grilla responsive y utilidades de interfaz.
+- **Bootstrap 5.3.3:** se carga desde `cowork/static/cowork/vendor/bootstrap/` en `cowork/base.html` y aporta la grilla responsive y utilidades de interfaz. Se incluye su licencia MIT y los archivos oficiales CSS y JavaScript.
 
 ## Frontend y sistema visual
 

@@ -84,14 +84,15 @@ class ArquitecturaDePlantillasTests(SimpleTestCase):
 
 
 class PoliticaCspTests(HostPermitidoTests):
-    def test_csp_permite_bootstrap_desde_jsdelivr(self):
+    def test_bootstrap_local_permitido_por_csp(self):
         response = self.client.get('/')
         csp = response.headers['Content-Security-Policy']
 
-        self.assertIn("script-src 'self' https://cdn.jsdelivr.net", csp)
-        self.assertIn('https://cdn.jsdelivr.net', csp)
+        self.assertIn("script-src 'self'", csp)
+        self.assertNotIn('https://cdn.jsdelivr.net', csp)
         self.assertIn("'unsafe-inline'", csp)
-        self.assertContains(response, 'rel="stylesheet"')
+        self.assertContains(response, '/static/cowork/vendor/bootstrap/css/bootstrap.min.css')
+        self.assertContains(response, '/static/cowork/vendor/bootstrap/js/bootstrap.bundle.min.js')
 
 
 class CatalogoInicialTests(TestCase):

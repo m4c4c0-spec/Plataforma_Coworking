@@ -29,8 +29,7 @@ SECRET_KEY = os.getenv(
     'django-insecure-development-only-not-for-production',
 )
 
-# The technical Django error pages expose URL patterns and implementation details.
-# Enable them explicitly for local development only.
+# Mantiene las páginas de error personalizadas, también durante el desarrollo.
 DEBUG = False
 
 ALLOWED_HOSTS = [
@@ -53,8 +52,8 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
     'cowork',
+    'django.contrib.staticfiles',
 	
 ]
 
@@ -73,13 +72,12 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = 'same-origin'
 X_FRAME_OPTIONS = 'DENY'
 
-# Bootstrap 5 se carga desde jsDelivr. El CSS propio de la marca sigue inline en base.html,
-# y el admin de Django también usa estilos inline, por eso style-src mantiene unsafe-inline.
-BOOTSTRAP_CDN = 'https://cdn.jsdelivr.net'
+# Bootstrap y el CSS propio se sirven desde static.
+# El admin de Django usa estilos inline, por eso style-src mantiene unsafe-inline.
 SECURE_CSP = {
     'default-src': [CSP.SELF],
-    'script-src': [CSP.SELF, BOOTSTRAP_CDN],
-    'style-src': [CSP.SELF, CSP.UNSAFE_INLINE, BOOTSTRAP_CDN],
+    'script-src': [CSP.SELF],
+    'style-src': [CSP.SELF, CSP.UNSAFE_INLINE],
     'img-src': [CSP.SELF, 'data:'],
     'font-src': [CSP.SELF],
     'connect-src': [CSP.SELF],

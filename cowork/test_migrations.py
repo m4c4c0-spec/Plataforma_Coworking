@@ -9,7 +9,7 @@ from django.utils import timezone
 
 class MigracionDiagramaTests(TransactionTestCase):
     anterior = [('cowork', '0002_espacio_y_reserva')]
-    actual = [('cowork', '0004_modelos_diagrama')]
+    actual = [('cowork', '0004_interaccion_del_usuario')]
 
     def migrar(self, destino):
         executor = MigrationExecutor(connection)
