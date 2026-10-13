@@ -1,3 +1,5 @@
+"""Pruebas de configuración del proyecto y archivos estáticos en desarrollo."""
+
 from django.core.management import get_commands, load_command_class
 from django.test import Client, RequestFactory, SimpleTestCase, override_settings
 

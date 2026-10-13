@@ -1,19 +1,21 @@
 from django.core.exceptions import ValidationError
 from django.db.models import Count, Q
 
+from .fechas import fecha_utc
 from .models import Espacio, EventoAuditoria, Reserva, Usuario, exigir_permiso
+from .reportes import GeneracionReportes
+from .reportes_dto import RangoFecha
 
 
-class ServicioReportes:
+class ServicioReportes(GeneracionReportes):
     """Consultas sin escritura. Los reportes globales requieren administración."""
 
     @staticmethod
     def _validar_periodo(desde, hasta):
-        if not desde or not hasta or hasta <= desde:
-            raise ValidationError('El fin del período debe ser posterior al inicio.')
+        return RangoFecha(desde, hasta)
 
-    @staticmethod
-    def buscarReservas(filtros, actor):
+    @classmethod
+    def buscarReservas(cls, filtros, actor):
         actor = exigir_permiso(actor, 'ver_reservas')
         reservas = Reserva.objects.select_related('usuario', 'espacio__sede', 'espacio__tipo')
         if actor.rol != Usuario.Rol.ADMINISTRADOR:
@@ -22,38 +24,37 @@ class ServicioReportes:
         if set(filtros) - permitidos:
             raise ValidationError('Los filtros contienen campos no permitidos.')
         filtros = dict(filtros)
-        desde, hasta = filtros.pop('desde', None), filtros.pop('hasta', None)
-        if desde and hasta:
-            ServicioReportes._validar_periodo(desde, hasta)
-        if desde:
-            reservas = reservas.filter(fin__gt=desde)
-        if hasta:
-            reservas = reservas.filter(inicio__lt=hasta)
+        reservas = cls._filtrar_fechas(reservas, filtros)
         return reservas.filter(**filtros)
 
-    @staticmethod
-    def calcularUsoEspacios(desde, hasta, actor):
+    @classmethod
+    def _filtrar_fechas(cls, reservas, filtros):
+        desde, hasta = filtros.pop('desde', None), filtros.pop('hasta', None)
+        if desde is not None and hasta is not None:
+            periodo = cls._validar_periodo(desde, hasta)
+            desde, hasta = periodo.desde, periodo.hasta
+        if desde is not None:
+            reservas = reservas.filter(fin__gt=fecha_utc(desde))
+        if hasta is not None:
+            reservas = reservas.filter(inicio__lt=fecha_utc(hasta))
+        return reservas
+
+    @classmethod
+    def calcularUsoEspacios(cls, desde, hasta, actor):
         exigir_permiso(actor, 'ver_reportes')
-        ServicioReportes._validar_periodo(desde, hasta)
+        periodo = cls._validar_periodo(desde, hasta)
         resultado = {
             espacio.pk: {'nombre': espacio.nombre, 'reservas': 0, 'horas': 0.0}
             for espacio in Espacio.objects.all()
         }
-        reservas = Reserva.objects.filter(
-            estado__in=[Reserva.Estado.CONFIRMADA, Reserva.Estado.FINALIZADA],
-            inicio__lt=hasta, fin__gt=desde,
-        )
-        for reserva in reservas:
-            uso = resultado[reserva.espacio_id]
-            uso['reservas'] += 1
-            uso['horas'] += (min(reserva.fin, hasta) - max(reserva.inicio, desde)).total_seconds() / 3600
+        cls._sumar_uso(resultado, cls._reservas_uso(periodo), periodo.desde, periodo.hasta)
         return resultado
 
     @staticmethod
     def resumirActividad(desde, hasta, actor):
         exigir_permiso(actor, 'ver_reportes')
-        ServicioReportes._validar_periodo(desde, hasta)
-        eventos = EventoAuditoria.objects.filter(fecha__gte=desde, fecha__lt=hasta)
+        periodo = ServicioReportes._validar_periodo(desde, hasta)
+        eventos = EventoAuditoria.objects.filter(fecha__gte=periodo.desde, fecha__lt=periodo.hasta)
         return {
             'total': eventos.count(),
             'por_accion': dict(eventos.values('accion').annotate(total=Count('pk')).values_list('accion', 'total')),
@@ -62,11 +63,13 @@ class ServicioReportes:
     @staticmethod
     def analizarUsuarios(desde, hasta, actor):
         exigir_permiso(actor, 'ver_reportes')
-        ServicioReportes._validar_periodo(desde, hasta)
+        periodo = ServicioReportes._validar_periodo(desde, hasta)
         return Usuario.objects.aggregate(
             total=Count('pk', distinct=True), activos=Count('pk', distinct=True, filter=Q(activo=True)),
-            registrados=Count('pk', distinct=True, filter=Q(fecha_registro__gte=desde, fecha_registro__lt=hasta)),
+            registrados=Count('pk', distinct=True, filter=Q(
+                fecha_registro__gte=periodo.desde, fecha_registro__lt=periodo.hasta,
+            )),
             con_reservas=Count('pk', distinct=True, filter=Q(
-                reservas__inicio__lt=hasta, reservas__fin__gt=desde,
+                reservas__inicio__lt=periodo.hasta, reservas__fin__gt=periodo.desde,
             )),
         )

@@ -1,0 +1,50 @@
+[
+    {
+        "model": "cowork.tipoespacio",
+        "pk": 1,
+        "fields": {
+            "nombre": "Escritorio compartido",
+            "descripcion": "Puesto de trabajo libre en un área abierta, sin ubicación asignada."
+        }
+    },
+    {
+        "model": "cowork.tipoespacio",
+        "pk": 2,
+        "fields": {
+            "nombre": "Escritorio fijo",
+            "descripcion": "Puesto de trabajo asignado en un área abierta."
+        }
+    },
+    {
+        "model": "cowork.tipoespacio",
+        "pk": 3,
+        "fields": {
+            "nombre": "Oficina privada",
+            "descripcion": "Oficina cerrada para equipos pequeños."
+        }
+    },
+    {
+        "model": "cowork.tipoespacio",
+        "pk": 4,
+        "fields": {
+            "nombre": "Sala de reuniones",
+            "descripcion": "Sala cerrada con mesa, pantalla y videoconferencia."
+        }
+    },
+    {
+        "model": "cowork.tipoespacio",
+        "pk": 5,
+        "fields": {
+            "nombre": "Cabina telefónica",
+            "descripcion": "Cabina individual para llamadas y videollamadas."
+        }
+    },
+    {
+        "model": "cowork.tipoespacio",
+        "pk": 6,
+        "fields": {
+            "nombre": "Sala de eventos",
+            "descripcion": "Espacio amplio para talleres, charlas y presentaciones."
+        }
+    }
+]

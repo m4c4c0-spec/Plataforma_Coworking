@@ -1,5 +1,10 @@
 .venv/
+.venv-1/
 __pycache__/
 *.pyc
 db.sqlite3
 .env
+.env.mysql
+
+# Documentación local de los modelos y su correspondencia con el diagrama.
+/docs/local/modelos/

@@ -1,0 +1,31 @@
+# Base MariaDB local: base de datos principal de Django.
+# Reutiliza las credenciales de .env, que compose lee automáticamente:
+#   podman compose up -d
+services:
+  mariadb:
+    image: docker.io/library/mariadb:11.4
+    container_name: coworking-mariadb
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: ${MYSQL_DATABASE:?Define MYSQL_DATABASE en .env}
+      MARIADB_USER: ${MYSQL_USER:?Define MYSQL_USER en .env}
+      MARIADB_PASSWORD: ${MYSQL_PASSWORD:?Define MYSQL_PASSWORD en .env}
+      MARIADB_RANDOM_ROOT_PASSWORD: "1"
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    ports:
+      # Solo escucha en el equipo local.
+      - "127.0.0.1:${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - coworking-mariadb-datos:/var/lib/mysql
+      # Scripts de la primera inicialización (permisos para la base de pruebas).
+      - ./db/init:/docker-entrypoint-initdb.d:ro,z
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  coworking-mariadb-datos:

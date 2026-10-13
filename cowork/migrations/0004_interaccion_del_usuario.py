@@ -149,6 +149,13 @@ class Migration(migrations.Migration):
             model_name='espacio',
             constraint=models.CheckConstraint(condition=models.Q(('estado__in', ['disponible', 'mantenimiento', 'inactivo'])), name='espacio_estado_valido'),
         ),
+        # Sin restricción mientras los datos cambian de cuentas a perfiles. MySQL valida
+        # las claves foráneas de inmediato, también al revertir la migración.
+        migrations.AlterField(
+            model_name='reserva',
+            name='usuario',
+            field=models.ForeignKey(db_constraint=False, on_delete=PROTECT, related_name='reservas', to=settings.AUTH_USER_MODEL),
+        ),
         migrations.RunPython(completar_datos, restaurar_datos),
         migrations.RemoveField(
             model_name='espacio',

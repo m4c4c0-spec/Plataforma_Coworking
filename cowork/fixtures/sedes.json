@@ -1,0 +1,42 @@
+[
+    {
+        "model": "cowork.sede",
+        "pk": 1,
+        "fields": {
+            "nombre": "Sede Centro",
+            "direccion": "Av. Libertador Bernardo O'Higgins 1234",
+            "ciudad": "Santiago",
+            "activa": true
+        }
+    },
+    {
+        "model": "cowork.sede",
+        "pk": 2,
+        "fields": {
+            "nombre": "Sede Providencia",
+            "direccion": "Av. Providencia 2150",
+            "ciudad": "Providencia",
+            "activa": true
+        }
+    },
+    {
+        "model": "cowork.sede",
+        "pk": 3,
+        "fields": {
+            "nombre": "Sede Viña del Mar",
+            "direccion": "Av. Libertad 1050",
+            "ciudad": "Viña del Mar",
+            "activa": true
+        }
+    },
+    {
+        "model": "cowork.sede",
+        "pk": 4,
+        "fields": {
+            "nombre": "Sede Concepción",
+            "direccion": "Calle Barros Arana 800",
+            "ciudad": "Concepción",
+            "activa": true
+        }
+    }
+]

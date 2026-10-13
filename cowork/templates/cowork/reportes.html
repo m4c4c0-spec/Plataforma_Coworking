@@ -1,0 +1,22 @@
+{% extends "cowork/gestion_base.html" %}
+{% block gestion_title %}Reportes{% endblock %}
+{% block gestion_content %}
+<section class="content-panel mx-auto" style="max-width: 760px">
+    <h1 class="h3 mb-2">Reportes</h1>
+    <p class="mb-4">Descarga el detalle de reservas o el uso diario de los espacios en PDF o Excel.
+        El uso diario suma las horas de reservas confirmadas y finalizadas.</p>
+    <form method="get">
+        {% for error in form.non_field_errors %}<p class="alert alert-danger" role="alert">{{ error }}</p>{% endfor %}
+        {% for field in form %}
+            <div class="mb-3">
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                {% for error in field.errors %}<div class="text-danger" role="alert">{{ error }}</div>{% endfor %}
+            </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary">Descargar</button>
+        <a class="btn btn-outline-secondary" href="{% url 'reservas' %}">Volver</a>
+    </form>
+</section>
+{% endblock %}

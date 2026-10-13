@@ -20,6 +20,6 @@
             <a class="btn btn-primary" href="{% url 'reserva_crear' %}">Crear reserva</a>
         {% endif %}
     </article></div>
-    {% empty %}<p>No hay espacios disponibles. Administración puede configurar sedes y tipos en gestión interna.</p>{% endfor %}
+    {% empty %}<p>No hay espacios disponibles.{% if es_admin %} Primero crea una <a href="{% url 'sedes' %}">sede</a> y un <a href="{% url 'tipos_espacio' %}">tipo de espacio</a>.{% endif %}</p>{% endfor %}
 </section>
 {% endblock %}

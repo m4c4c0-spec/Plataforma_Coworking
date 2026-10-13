@@ -1,9 +1,13 @@
+from datetime import timedelta
+
 from django import forms
 from django.contrib.auth import get_user_model, password_validation
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
-from .models import Espacio, Reserva, Usuario
+from .models import Espacio, Reserva, Sede, TipoEspacio, Usuario
+from .reportes_dto import Formato, TipoReporte
+from .services import ServicioReportes
 
 
 class FormularioBootstrap:
@@ -74,6 +78,19 @@ class UsuarioForm(FormularioBootstrap, forms.ModelForm):
         return usuario
 
 
+class SedeForm(FormularioBootstrap, forms.ModelForm):
+    class Meta:
+        model = Sede
+        fields = ['nombre', 'direccion', 'ciudad', 'activa']
+
+
+class TipoEspacioForm(FormularioBootstrap, forms.ModelForm):
+    class Meta:
+        model = TipoEspacio
+        fields = ['nombre', 'descripcion']
+        widgets = {'descripcion': forms.Textarea(attrs={'rows': 3})}
+
+
 class EspacioForm(FormularioBootstrap, forms.ModelForm):
     class Meta:
         model = Espacio
@@ -114,3 +131,57 @@ class ReservaForm(FormularioBootstrap, forms.ModelForm):
 
 class CancelacionForm(FormularioBootstrap, forms.Form):
     motivo = forms.CharField(label='Motivo de cancelación', widget=forms.Textarea(attrs={'rows': 3}))
+
+
+class ReporteForm(FormularioBootstrap, forms.Form):
+    """Valida los parámetros de un reporte; la pantalla y la API comparten esta lógica."""
+
+    MAXIMO_DIAS = 366
+
+    tipo = forms.ChoiceField(label='Reporte', choices=[
+        (TipoReporte.RESERVAS.value, 'Detalle de reservas'),
+        (TipoReporte.DIARIO.value, 'Uso diario por espacio'),
+    ])
+    formato = forms.ChoiceField(choices=[(Formato.PDF.value, 'PDF'), (Formato.EXCEL.value, 'Excel (xlsx)')])
+    desde = forms.DateField(required=False, widget=forms.DateInput(attrs={'type': 'date'}))
+    hasta = forms.DateField(
+        label='Hasta (incluido)', required=False, widget=forms.DateInput(attrs={'type': 'date'}),
+    )
+    usuario = forms.ModelChoiceField(
+        Usuario.objects.all(), required=False, empty_label='Todos',
+        help_text='Solo para el detalle de reservas.',
+    )
+    espacio = forms.ModelChoiceField(
+        Espacio.objects.select_related('sede'), required=False, empty_label='Todos',
+        help_text='Solo para el detalle de reservas.',
+    )
+    estado = forms.ChoiceField(
+        choices=[('', 'Todos')] + Reserva.Estado.choices, required=False,
+        help_text='Solo para el detalle de reservas.',
+    )
+
+    def clean(self):
+        datos = super().clean()
+        desde, hasta = datos.get('desde'), datos.get('hasta')
+        if desde and hasta and hasta < desde:
+            self.add_error('hasta', 'La fecha final no puede ser anterior a la inicial.')
+        elif datos.get('tipo') == TipoReporte.DIARIO.value:
+            if not desde or not hasta:
+                self.add_error(None, 'El reporte diario requiere las fechas desde y hasta.')
+            elif (hasta - desde).days >= self.MAXIMO_DIAS:
+                self.add_error('hasta', f'El reporte diario admite hasta {self.MAXIMO_DIAS} días.')
+        return datos
+
+    def generar(self, actor):
+        datos = self.cleaned_data
+        filtros = {'desde': datos['desde'], 'hasta': None}
+        if datos['hasta']:
+            # La fecha final se incluye completa: el período termina al iniciar el día siguiente.
+            filtros['hasta'] = datos['hasta'] + timedelta(days=1)
+        if datos['tipo'] == TipoReporte.RESERVAS.value:
+            filtros.update(
+                usuario_id=datos['usuario'].pk if datos['usuario'] else None,
+                espacio_id=datos['espacio'].pk if datos['espacio'] else None,
+                estado=datos['estado'] or None,
+            )
+        return ServicioReportes.generarDocumento(datos['tipo'], datos['formato'], actor, **filtros)

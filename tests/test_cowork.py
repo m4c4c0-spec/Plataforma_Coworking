@@ -1,3 +1,5 @@
+"""Pruebas de páginas públicas, plantillas, seguridad y catálogos."""
+
 from pathlib import Path
 
 from django.conf import settings
@@ -43,6 +45,14 @@ class PaginasPublicasTests(HostPermitidoTests):
         self.assertEqual(reverse('bienvenida'), '/')
         self.assertEqual(reverse('inicio'), '/inicio/')
 
+    def test_paginas_conservan_html_con_accept_json(self):
+        for ruta in ('bienvenida', 'inicio'):
+            with self.subTest(ruta=ruta):
+                respuesta = self.client.get(reverse(ruta), HTTP_ACCEPT='application/json')
+                self.assertEqual(respuesta.status_code, 200)
+                self.assertIn('text/html', respuesta['Content-Type'])
+                self.assertTemplateUsed(respuesta, f'cowork/{ruta}.html')
+
 
 class Error404Tests(HostPermitidoTests):
     @override_settings(DEBUG=False)
@@ -57,6 +67,17 @@ class Error404Tests(HostPermitidoTests):
         self.assertContains(response, 'bootstrap.min.css', status_code=404)
         self.assertNotContains(response, 'DisallowedHost', status_code=404)
         self.assertNotContains(response, 'Traceback', status_code=404)
+
+    @override_settings(DEBUG=False)
+    def test_error_404_conserva_html_para_distintos_metodos_y_accept(self):
+        for metodo in ('HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'):
+            with self.subTest(metodo=metodo):
+                respuesta = self.client.generic(
+                    metodo, '/ruta-que-no-existe/', HTTP_ACCEPT='application/json',
+                )
+                self.assertEqual(respuesta.status_code, 404)
+                self.assertIn('text/html', respuesta['Content-Type'])
+                self.assertTemplateUsed(respuesta, 'cowork/404.html')
 
 
 class ArquitecturaDePlantillasTests(SimpleTestCase):

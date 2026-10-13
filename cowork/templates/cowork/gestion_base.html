@@ -7,7 +7,12 @@
         <a class="navbar-brand" href="{% url 'inicio' %}">Plataforma Coworking</a>
         <a href="{% url 'espacios' %}">Espacios</a>
         <a href="{% url 'reservas' %}">Reservas</a>
-        {% if es_admin %}<a href="{% url 'usuarios' %}">Usuarios</a>{% endif %}
+        {% if es_admin %}
+            <a href="{% url 'sedes' %}">Sedes</a>
+            <a href="{% url 'tipos_espacio' %}">Tipos</a>
+            <a href="{% url 'usuarios' %}">Usuarios</a>
+            <a href="{% url 'reportes' %}">Reportes</a>
+        {% endif %}
         <span class="ms-auto">{{ actor.nombre }}</span>
         <form method="post" action="{% url 'logout' %}">
             {% csrf_token %}<button class="btn btn-outline-secondary btn-sm" type="submit">Salir</button>

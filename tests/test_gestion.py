@@ -8,8 +8,8 @@ from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from .models import Espacio, EventoAuditoria, Reserva, Sede, TipoEspacio, Usuario
-from .services import ServicioReportes
+from cowork.models import Espacio, EventoAuditoria, Reserva, Sede, TipoEspacio, Usuario
+from cowork.services import ServicioReportes
 
 
 class DatosCoworkTests(TestCase):
@@ -413,3 +413,54 @@ class PantallasCrudTests(DatosCoworkTests):
         self.client.force_login(cuenta)
         self.assertEqual(self.client.get(reverse('usuarios')).status_code, 200)
         self.assertEqual(Usuario.objects.get(cuenta=cuenta).rol, Usuario.Rol.ADMINISTRADOR)
+
+    def test_ingreso_y_salida_exigen_csrf_y_conservan_la_sesion(self):
+        cliente = Client(enforce_csrf_checks=True, HTTP_HOST='localhost')
+        datos = {'username': 'miembro', 'password': 'ClaveSegura-739!'}
+        self.assertEqual(cliente.post(reverse('login'), datos).status_code, 403)
+        self.assertNotIn('_auth_user_id', cliente.session)
+        respuesta = cliente.get(reverse('login'))
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertIn('no-store', respuesta['Cache-Control'])
+        datos['csrfmiddlewaretoken'] = cliente.cookies['csrftoken'].value
+        self.assertRedirects(cliente.post(reverse('login'), datos), reverse('reservas'))
+        self.assertEqual(cliente.session['_auth_user_id'], str(self.miembro.cuenta_id))
+        self.assertEqual(cliente.get(reverse('logout')).status_code, 405)
+        self.assertEqual(cliente.post(reverse('logout')).status_code, 403)
+        self.assertIn('_auth_user_id', cliente.session)
+        token = cliente.cookies['csrftoken'].value
+        respuesta = cliente.post(reverse('logout'), {'csrfmiddlewaretoken': token})
+        self.assertRedirects(respuesta, reverse('bienvenida'))
+        self.assertNotIn('_auth_user_id', cliente.session)
+        self.assertRedirects(cliente.get(reverse('reservas')), '/ingresar/?next=/reservas/')
+
+    def test_ingreso_conserva_next_local_y_rechaza_redireccion_externa(self):
+        for destino, esperado in (('/espacios/', '/espacios/'), ('https://externo.example/', '/reservas/')):
+            with self.subTest(destino=destino):
+                self.client.logout()
+                respuesta = self.client.post(reverse('login'), {
+                    'username': 'miembro', 'password': 'ClaveSegura-739!', 'next': destino,
+                })
+                self.assertRedirects(respuesta, esperado)
+
+    def test_listados_y_formularios_rechazan_metodos_no_permitidos(self):
+        self.client.force_login(self.admin.cuenta)
+        for ruta in ('usuarios', 'espacios', 'reservas'):
+            with self.subTest(ruta=ruta):
+                self.assertEqual(self.client.post(reverse(ruta)).status_code, 405)
+                respuesta = self.client.head(reverse(ruta))
+                self.assertEqual(respuesta.status_code, 200)
+                self.assertEqual(respuesta.content, b'')
+        for ruta in ('usuario_crear', 'espacio_crear', 'reserva_crear'):
+            with self.subTest(ruta=ruta):
+                self.assertEqual(self.client.put(reverse(ruta)).status_code, 405)
+                self.assertEqual(self.client.delete(reverse(ruta)).status_code, 405)
+        self.assertFalse(Reserva.objects.exists())
+        self.assertFalse(EventoAuditoria.objects.exists())
+
+    def test_detalle_inexistente_conserva_la_pagina_404(self):
+        self.client.force_login(self.miembro.cuenta)
+        respuesta = self.client.get(reverse('reserva_detalle', args=[99999]))
+        self.assertEqual(respuesta.status_code, 404)
+        self.assertTemplateUsed(respuesta, 'cowork/404.html')
+        self.assertContains(respuesta, 'Esta página no está disponible.', status_code=404)

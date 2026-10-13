@@ -10,9 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
-import os
 from pathlib import Path
 
+from decouple import config
 from django.utils.csp import CSP
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -22,12 +22,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
-# Esta clave publica permite ejecutar la evaluacion local sin configuracion adicional.
-# En produccion debe reemplazarse mediante la variable de entorno DJANGO_SECRET_KEY.
-SECRET_KEY = os.getenv(
-    'DJANGO_SECRET_KEY',
-    'django-insecure-development-only-not-for-production',
-)
+# Los datos sensibles se leen desde el archivo .env (ver .env.example).
+SECRET_KEY = config('SECRET_KEY')
 
 # Mantiene las páginas de error personalizadas, también durante el desarrollo.
 DEBUG = False
@@ -38,7 +34,7 @@ ALLOWED_HOSTS = [
 ]
 
 # Avoid exposing Django's conventional /admin/ endpoint to automated scanners.
-ADMIN_URL_PATH = os.getenv('DJANGO_ADMIN_URL_PATH', 'gestion-interna').strip('/')
+ADMIN_URL_PATH = config('DJANGO_ADMIN_URL_PATH', default='gestion-interna').strip('/')
 if not ADMIN_URL_PATH:
     raise ValueError('DJANGO_ADMIN_URL_PATH cannot be empty.')
 ADMIN_URL_PATH = f'{ADMIN_URL_PATH}/'
@@ -52,6 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'rest_framework',
     'cowork',
     'django.contrib.staticfiles',
 	
@@ -110,14 +107,29 @@ WSGI_APPLICATION = 'drf.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases
 
+# MySQL/MariaDB es la base principal. Las credenciales se leen desde .env.
+# Django 6.1 admite MySQL 8.4+ y MariaDB 10.11+ (ver README).
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-        # SQLite serializa escrituras antes de validar disponibilidad dentro de atomic().
-        'OPTIONS': {'transaction_mode': 'IMMEDIATE', 'timeout': 20},
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': config('MYSQL_DATABASE'),
+        'USER': config('MYSQL_USER'),
+        'PASSWORD': config('MYSQL_PASSWORD', default=''),
+        'HOST': config('MYSQL_HOST', default='127.0.0.1'),
+        'PORT': config('MYSQL_PORT', default='3306'),
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            'connect_timeout': 5,
+        },
+        # La base de pruebas compara correos sin distinguir mayúsculas, igual que la principal.
+        'TEST': {'CHARSET': 'utf8mb4', 'COLLATION': 'utf8mb4_unicode_ci'},
     }
 }
+
+# MariaDB no crea el índice Lower('correo'); la collation utf8mb4_unicode_ci y el
+# campo único mantienen el correo sin distinguir mayúsculas (ver README).
+SILENCED_SYSTEM_CHECKS = ['models.W044']
 
 
 # Password validation

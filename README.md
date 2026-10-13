@@ -4,10 +4,11 @@ Plataforma de trabajo compartido orientada a organizar espacios, reservas y comu
 
 ## Requisitos
 
-- Python instalado.
-- Git instalado.
+- Python 3.12 o superior (compatible con Django 6.1).
+- Git.
 - Fedora Linux o Windows 10/11.
-- La versión de Python debe ser compatible con Django 6.1 (Python 3.12 o superior).
+- Un servidor **MySQL 8.4+ o MariaDB 10.11+**. Es la base de datos principal del
+  proyecto: sin él la aplicación no inicia. Ver [Base de datos MySQL/MariaDB](#base-de-datos-mysqlmariadb).
 
 Para comprobar que Python está disponible:
 
@@ -15,12 +16,90 @@ Para comprobar que Python está disponible:
 py --version
 ```
 
-## Instalación y sesión de trabajo en Fedora Linux
+## Base de datos MySQL/MariaDB
 
-Instala Python, pip y Git si todavía no están disponibles:
+Todas las pantallas, la autenticación, el CRUD, las APIs y Django Admin usan una
+sola base MySQL/MariaDB (conexión `default`). MySQL y MariaDB comparten el backend
+`django.db.backends.mysql` de Django; el controlador es `mysqlclient`, incluido en
+`requirements.txt`. Las credenciales se leen desde `.env`
+(ver [Datos sensibles y archivo .env](#datos-sensibles-y-archivo-env)).
+
+Elige una de estas formas de levantar el servidor.
+
+### Opción A (recomendada): contenedor con Podman o Docker
+
+`compose.yaml` levanta MariaDB 11.4 LTS sin instalar el servidor en el sistema.
+Toma la base, el usuario, la contraseña y el puerto de `.env`, crea la base con
+`utf8mb4_unicode_ci`, concede al usuario permisos sobre la base de pruebas
+(`db/init/01-permisos-pruebas.sh`) y guarda los datos en un volumen. Solo escucha
+en `127.0.0.1`.
+
+- **Fedora:** Podman viene instalado. Instala el proveedor de compose una vez con
+  `sudo dnf install podman-compose`.
+- **Windows 10/11:** instala Podman Desktop o Docker Desktop (ambos usan WSL2).
+  Con Docker, reemplaza `podman compose` por `docker compose`.
+
+Con `.env` completo, desde la raíz del proyecto (compose lee `.env` automáticamente):
 
 ```bash
-sudo dnf install python3 python3-pip git
+podman compose up -d    # crear o iniciar
+podman compose ps       # estado (healthy cuando está lista)
+podman compose stop     # detener conservando los datos
+podman compose down -v  # eliminar contenedor y datos
+```
+
+La base y el usuario se crean solos la primera vez. Si hay otro MySQL/MariaDB
+usando el puerto 3306, detenlo o cambia `MYSQL_PORT` en `.env`.
+
+### Opción B: servidor instalado en el equipo
+
+Sirve MariaDB o MySQL instalado como servicio: en Fedora `sudo dnf install mariadb-server`
+y `sudo systemctl start mariadb`; en Windows el instalador oficial de MariaDB 11.4 LTS
+o MySQL 8.4 LTS, o WampServer. **XAMPP no sirve**: incluye MariaDB 10.4, más antigua
+de lo que exige Django 6.1. Para comprobar la versión ejecuta `SELECT VERSION();`.
+
+Abre la consola SQL como administrador (`sudo mariadb`, `mysql -u root -p`, HeidiSQL
+o phpMyAdmin) y crea la base y un usuario exclusivo. Usa los mismos valores que
+pondrás en `.env` y reemplaza la contraseña del ejemplo:
+
+```sql
+CREATE DATABASE plataforma_coworking_local
+    CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'coworking_local'@'127.0.0.1'
+    IDENTIFIED BY 'REEMPLAZA_CON_TU_CONTRASENA';
+GRANT ALL PRIVILEGES ON plataforma_coworking_local.*
+    TO 'coworking_local'@'127.0.0.1';
+-- Base temporal que crea y elimina `python manage.py test`.
+GRANT ALL PRIVILEGES ON test_plataforma_coworking_local.*
+    TO 'coworking_local'@'127.0.0.1';
+EXIT;
+```
+
+Ejecuta la creación solo en la primera instalación. El usuario de la aplicación
+tiene permisos solamente sobre su base y la base de pruebas.
+
+### Comprobar la conexión
+
+Con el ambiente virtual activado y `.env` completo:
+
+```bash
+python manage.py shell -c "from django.db import connection; connection.ensure_connection(); print('Conexión MySQL/MariaDB correcta')"
+```
+
+MariaDB no admite el índice funcional de `Lower('correo')`; la advertencia
+`models.W044` está silenciada en `drf/settings.py`. El campo `correo` sigue siendo
+único y, con la collation `utf8mb4_unicode_ci`, compara sin distinguir mayúsculas
+de minúsculas. En MySQL 8.4 el índice funcional sí se crea.
+
+Referencias: [bases de datos de Django](https://docs.djangoproject.com/en/6.1/ref/databases/)
+e [instalación de mysqlclient](https://github.com/PyMySQL/mysqlclient#install).
+
+## Instalación y sesión de trabajo en Fedora Linux
+
+Instala Python, Git y las herramientas para compilar `mysqlclient`:
+
+```bash
+sudo dnf install python3 python3-pip git gcc python3-devel mariadb-connector-c-devel pkgconf-pkg-config
 python3 --version
 ```
 
@@ -31,7 +110,19 @@ cd /ruta/al/Plataforma_Coworking
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
+cp -n .env.example .env
+chmod 600 .env
+```
+
+Completa `SECRET_KEY` y `MYSQL_PASSWORD` en `.env` (ver
+[Datos sensibles y archivo .env](#datos-sensibles-y-archivo-env)), levanta la base
+(ver [Base de datos MySQL/MariaDB](#base-de-datos-mysqlmariadb)) y crea las tablas:
+
+```bash
+podman compose up -d
 python manage.py migrate
+python manage.py loaddata sedes tipos_espacio
+python manage.py createsuperuser
 ```
 
 Si `.venv` ya existe y fue creado en este equipo con una versión compatible de Python, omite su creación. Un ambiente virtual de Windows no se puede reutilizar en Linux.
@@ -40,17 +131,12 @@ Para iniciar cada nueva sesión de desarrollo:
 
 ```bash
 cd /ruta/al/Plataforma_Coworking
+podman compose up -d
 source .venv/bin/activate
 python manage.py runserver
 ```
 
 Abre <http://127.0.0.1:8000/>. El proyecto mantiene `DEBUG=False` y su comando `runserver` sirve los archivos estáticos durante el desarrollo. Bootstrap está incluido en el repositorio, por lo que el diseño funciona sin conexión a un CDN. No necesitas configurar `DJANGO_DEBUG`.
-
-Para crear una cuenta administradora, con el ambiente activado:
-
-```bash
-python manage.py createsuperuser
-```
 
 Detén el servidor con `Ctrl+C` y cierra la sesión del ambiente con:
 
@@ -99,15 +185,30 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 python -m pip install -r requirements.txt
 ```
 
-### 4. Preparar la base de datos
+En Windows, pip descarga `mysqlclient` ya compilado. Si pip intenta compilarlo y
+falla, utiliza una versión de Python para la que `mysqlclient` publique paquetes
+de Windows (por ejemplo, 3.12 o 3.13).
+
+### 4. Crear el archivo de ambiente
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Completa `SECRET_KEY` y `MYSQL_PASSWORD` en `.env` (ver [Datos sensibles y archivo .env](#datos-sensibles-y-archivo-env)).
+
+### 5. Levantar la base de datos y crear las tablas
+
+Inicia MySQL/MariaDB con la opción A o B de [Base de datos MySQL/MariaDB](#base-de-datos-mysqlmariadb)
+y luego ejecuta:
 
 ```powershell
 python manage.py migrate
+python manage.py loaddata sedes tipos_espacio
+python manage.py createsuperuser
 ```
 
-El archivo `db.sqlite3` se crea localmente y está excluido del repositorio mediante `.gitignore`.
-
-### 5. Iniciar la aplicación
+### 6. Iniciar la aplicación
 
 ```powershell
 python manage.py runserver
@@ -115,15 +216,259 @@ python manage.py runserver
 
 Abre la aplicación en <http://127.0.0.1:8000/>.
 
+## Datos iniciales (fixtures)
+
+La carpeta `cowork/fixtures/` contiene los catálogos precargados en formato JSON,
+un archivo por modelo:
+
+| Archivo | Modelo | Registros |
+| --- | --- | --- |
+| `sedes.json` | `cowork.sede` | Sede Centro (Santiago), Sede Providencia, Sede Viña del Mar y Sede Concepción, todas activas |
+| `tipos_espacio.json` | `cowork.tipoespacio` | Escritorio compartido, Escritorio fijo, Oficina privada, Sala de reuniones, Cabina telefónica y Sala de eventos |
+
+Cárgalos después de `migrate`:
+
+```bash
+python manage.py loaddata sedes tipos_espacio
+```
+
+Cada registro tiene un `pk` fijo: cargar los archivos de nuevo no duplica datos,
+pero **sobrescribe** la sede o el tipo con ese mismo `pk`, incluidos los cambios
+hechos desde el CRUD. Ejecútalo solo en una base nueva. `loaddata` guarda los
+registros directamente, sin pasar por `guardar(actor)`, por lo que la carga no
+genera eventos de auditoría.
+
+Los usuarios, espacios y reservas no se incluyen: los usuarios necesitan una cuenta
+de Django con contraseña (`createsuperuser` o el CRUD) y los espacios se crean
+desde `/espacios/nuevo/` usando estas sedes y tipos.
+
+## Datos sensibles y archivo .env
+
+La `SECRET_KEY` de Django y las credenciales de la base de datos no están en el
+código. `drf/settings.py` las lee con **python-decouple** (`from decouple import config`)
+desde el archivo `.env` de la raíz del proyecto, junto a `manage.py`. Django lo
+carga automáticamente en Linux y Windows; no necesitas exportar variables en la terminal.
+
+`.env` está excluido de Git. `.env.example` es la plantilla versionada con todas
+las variables. Para generar una clave secreta, con el ambiente activado:
+
+```bash
+python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+```
+
+Copia el resultado en `.env` entre comillas simples, sin espacios alrededor del `=`:
+
+```text
+SECRET_KEY='clave_generada'
+```
+
+| Variable | Obligatoria | Uso |
+| --- | --- | --- |
+| `SECRET_KEY` | Sí | Clave criptográfica de Django. |
+| `MYSQL_DATABASE`, `MYSQL_USER` | Sí | Base y usuario de la aplicación. |
+| `MYSQL_PASSWORD` | Sí | Contraseña del usuario de la aplicación. |
+| `MYSQL_HOST`, `MYSQL_PORT` | No | Servidor MySQL/MariaDB; por defecto `127.0.0.1:3306`. |
+| `DJANGO_ADMIN_URL_PATH` | No | Ruta del administrador; por defecto `gestion-interna`. |
+
+Si falta una variable obligatoria, Django se detiene indicando su nombre. Una
+variable definida en la terminal tiene prioridad sobre el valor de `.env`.
+
+## Consultar MySQL con SQLAlchemy y convertir los datos a JSON
+
+La API utiliza **SQLAlchemy** para consultar las tablas de negocio de MySQL,
+**mysqlclient** para abrir la conexión y los **serializers de Django REST Framework**
+para convertir los objetos obtenidos en datos JSON. SQLAlchemy utiliza el dialecto
+`mysql+mysqldb`, que corresponde al paquete `mysqlclient`.
+
+Las tablas son las mismas que crean las migraciones de Django (`cowork_sede`,
+`cowork_tipoespacio`, `cowork_usuario`, `cowork_espacio` y `cowork_reserva`).
+SQLAlchemy mapea esas tablas sin crear un esquema adicional y lee los mismos datos
+que guardan las pantallas y la API de gestión.
+
+Inicia sesión en `/ingresar/` con una cuenta administradora de la plataforma y
+abre cualquiera de estos endpoints en el mismo navegador:
+
+| Colección | Detalle por ID |
+| --- | --- |
+| `/api/mysql/sedes/` | `/api/mysql/sedes/1/` |
+| `/api/mysql/tipos-espacio/` | `/api/mysql/tipos-espacio/1/` |
+| `/api/mysql/usuarios/` | `/api/mysql/usuarios/1/` |
+| `/api/mysql/espacios/` | `/api/mysql/espacios/1/` |
+| `/api/mysql/reservas/` | `/api/mysql/reservas/1/` |
+
+La API admite consultas de lectura y requiere un administrador activo. Los serializers
+exponen campos explícitos: no incluyen contraseñas, la cuenta de autenticación
+ni las observaciones privadas del espacio. Las reservas incluyen su usuario,
+espacio, sede y tipo; las fechas se representan en ISO 8601 con zona UTC (`Z`).
+
+Los listados devuelven `count`, `limit`, `offset` y `results`. Por ejemplo,
+`/api/mysql/sedes/?limit=10&offset=0` puede devolver:
+
+```json
+{
+  "count": 1,
+  "limit": 10,
+  "offset": 0,
+  "results": [
+    {
+      "id": 1,
+      "nombre": "Sede Centro",
+      "direccion": "Calle 123",
+      "ciudad": "Santiago",
+      "activa": true
+    }
+  ]
+}
+```
+
+El límite predeterminado es 100, el máximo 200 y `offset` debe ser no negativo.
+Una tabla vacía devuelve `results: []`; un ID inexistente devuelve HTTP 404.
+Los parámetros inválidos devuelven HTTP 400 y la falta de permisos HTTP 403.
+Si falta el driver, el servicio no responde o las tablas
+no están preparadas, la API devuelve HTTP 503 sin publicar detalles de la conexión.
+
+También puedes consultar y serializar desde el shell de Django:
+
+```python
+import json
+from sqlalchemy import select
+from cowork.database import sesion_mysql
+from cowork.models_sqlalchemy import SedeSQL
+from cowork.serializers import SedeSerializer
+
+with sesion_mysql() as sesion:
+    sedes = sesion.scalars(select(SedeSQL).order_by(SedeSQL.id).limit(100)).all()
+    datos = SedeSerializer(sedes, many=True).data
+
+print(json.dumps(datos, ensure_ascii=False, indent=2))
+```
+
+La sesión se cierra después de cada consulta y las relaciones se cargan con JOINs
+para evitar una consulta adicional por registro. La configuración se reutiliza
+desde `DATABASES['default']`; no necesitas definir otra URL ni duplicar credenciales.
+
+Para ejecutar las pruebas, que utilizan una base SQLAlchemy aislada en memoria y no modifican MySQL local:
+
+```bash
+python manage.py test tests.test_api_mysql --noinput
+```
+
+Archivos principales: `cowork/database.py`, `cowork/models_sqlalchemy.py`,
+`cowork/serializers.py`, `cowork/views.py` y `cowork/urls.py`.
+
+Los ViewSets de consulta están en `cowork/views.py`. Se registran en el router
+`enrutador_mysql` (`DefaultRouter`) de `cowork/urls.py` y se incluyen bajo
+`/api/mysql/`, con los nombres `api_mysql:sede-list`, `api_mysql:sede-detail`, etc.
+`/api/mysql/` muestra la raíz de la API con el enlace de cada colección.
+
+Referencias: [SQLAlchemy con mysqlclient](https://docs.sqlalchemy.org/en/20/dialects/mysql.html#module-sqlalchemy.dialects.mysql.mysqldb)
+y [serializers de Django REST Framework](https://www.django-rest-framework.org/api-guide/serializers/).
+
+## Guardar mediante ViewSets y DefaultRouter
+
+Los ViewSets de gestión también están en **`cowork/views.py`**, dentro de la
+aplicación. `cowork/urls.py` los registra en un `routers.DefaultRouter`
+(`enrutador.register(r'sedes', views.SedeViewSet, basename='sede')`, etc.) y
+incluye sus rutas bajo `/api/`. El router genera las rutas de los métodos que
+implementa cada ViewSet y de sus acciones `@action` (desactivar, confirmar,
+cancelar y finalizar). `/api/` muestra la raíz de la API con el enlace de cada
+recurso. Los identificadores usan el conversor `int`, igual que las pantallas. Utilizan la base principal MySQL/MariaDB, la misma
+de las pantallas de gestión y de la API de consulta `/api/mysql/`.
+
+| Recurso | Listar y crear | Consultar y editar | Acciones POST por ID |
+| --- | --- | --- | --- |
+| Sedes | `/api/sedes/` | `/api/sedes/1/` | `/api/sedes/1/desactivar/` |
+| Tipos de espacio | `/api/tipos-espacio/` | `/api/tipos-espacio/1/` | `DELETE /api/tipos-espacio/1/` |
+| Usuarios | `/api/usuarios/` | `/api/usuarios/1/` | `/api/usuarios/1/desactivar/` |
+| Espacios | `/api/espacios/` | `/api/espacios/1/` | `/api/espacios/1/desactivar/` |
+| Reservas | `/api/reservas/` | `/api/reservas/1/` | `/api/reservas/1/confirmar/`, `/api/reservas/1/cancelar/`, `/api/reservas/1/finalizar/` |
+
+Usa `GET` para consultar, `POST` sobre la colección para crear, y `PUT` o `PATCH`
+sobre el detalle para editar. Crear devuelve HTTP 201; editar y ejecutar acciones
+devuelve HTTP 200. Las bajas conservan los registros: se desactivan sedes,
+usuarios y espacios, y se cancelan reservas; en esos recursos `DELETE` devuelve
+HTTP 405. Un tipo de espacio sin espacios asociados se elimina con `DELETE`
+(HTTP 204); si tiene espacios devuelve HTTP 400. Los administradores gestionan
+los catálogos y los miembros solo consultan las sedes activas y los tipos.
+
+Los administradores activos gestionan usuarios y espacios, y confirman o
+finalizan reservas. Los miembros activos pueden consultar espacios disponibles
+y crear, editar o cancelar sus propias reservas. Cada guardado utiliza los
+métodos del modelo para aplicar permisos, validaciones, historial y auditoría.
+Los errores de validación devuelven HTTP 400 con los campos correspondientes.
+
+Después de iniciar sesión en `/ingresar/`, un miembro puede enviar este JSON a
+`POST /api/reservas/`, usando el ID de un espacio existente y un horario libre:
+
+```json
+{
+  "espacio": 1,
+  "inicio": "2026-10-12T15:00:00Z",
+  "fin": "2026-10-12T16:00:00Z",
+  "cantidad_personas": 2,
+  "observaciones": "Necesito proyector"
+}
+```
+
+La API asigna al miembro como titular. Para crear como administrador, incluye
+`usuario` con el ID del titular. `estado`, `fecha_creacion` y `motivo_cancelacion`
+son campos de lectura; los cambios de estado se realizan mediante las acciones.
+Para cancelar, envía `{"motivo": "Cambio de planes"}` a la ruta de cancelación.
+
+Crear usuarios requiere `nombre_usuario`, `password`, `nombre` y `correo`;
+`apellido` y `rol` son opcionales. Al editar, omite `password` para conservar la
+contraseña. La API reutiliza `UsuarioForm` para validar y guardar la cuenta junto
+al perfil. Las contraseñas nunca se incluyen en las respuestas.
+
+Las peticiones usan autenticación de sesión. Para `POST`, `PUT` y `PATCH`, envía
+la cookie de sesión y el encabezado `X-CSRFToken` con el valor de la cookie
+`csrftoken`, obtenida al abrir una pantalla de gestión. Los listados devuelven
+una lista JSON; los detalles y guardados devuelven un objeto, con las relaciones
+de gestión representadas por sus IDs. Las observaciones privadas de los espacios
+solo se muestran a administradores.
+
+Los nombres de las rutas, generados por el router a partir del `basename`, siguen
+el formato `api:usuario-list`, `api:usuario-detail`, `api:espacio-desactivar` o
+`api:reserva-confirmar`.
+Para validar las rutas de ambas APIs y los flujos de guardado con bases aisladas:
+
+```bash
+python manage.py test tests.test_viewsets tests.test_api_mysql --noinput
+```
+
+Archivos principales: `cowork/views.py`, `cowork/serializers_gestion.py`,
+`cowork/urls.py` y `drf/urls.py`.
+Referencia: [ViewSets de Django REST Framework](https://www.django-rest-framework.org/api-guide/viewsets/).
+
 ## Rutas disponibles
 
 | URL | Vista | Plantilla | Resultado |
 | --- | --- | --- | --- |
-| `/` | `bienvenida` | `cowork/bienvenida.html` | Página de bienvenida |
-| `/inicio/` | `inicio` | `cowork/inicio.html` | Página principal |
-| Cualquier URL inexistente | `error_404` | `cowork/404.html` | Error HTTP 404 personalizado |
+| `/` | `PaginaViewSet.bienvenida` | `cowork/bienvenida.html` | Página de bienvenida |
+| `/inicio/` | `PaginaViewSet.inicio` | `cowork/inicio.html` | Página principal |
+| Cualquier URL inexistente | `Error404ViewSet.retrieve` | `cowork/404.html` | Error HTTP 404 personalizado |
 
 El botón **Entrar a la plataforma** utiliza el nombre de la ruta `inicio` para navegar desde la bienvenida hasta `/inicio/`.
+
+Todas las vistas HTTP propias de la aplicación están agrupadas en ViewSets
+dentro de `cowork/views.py`. `SedePantallaViewSet`, `TipoEspacioPantallaViewSet`,
+`UsuarioPantallaViewSet`, `EspacioPantallaViewSet`, `ReservaPantallaViewSet` y
+`ReportePantallaViewSet` reúnen los listados, formularios y acciones de las
+pantallas HTML.
+
+Las APIs JSON (`/api/` y `/api/mysql/`) usan `DefaultRouter`. Las pantallas HTML
+declaran sus rutas con `path()`, porque sus URLs (`nuevo/`, `editar/`, `desactivar/`)
+y sus nombres (`usuario_crear`, `espacio_editar`, etc.) son los que usan las
+plantillas y las redirecciones; un router genera otro formato de URLs pensado
+para APIs. Cada ruta indica el método HTTP y la acción del ViewSet mediante
+`as_view()` y los identificadores utilizan el conversor `<int:pk>`.
+
+Los listados y detalles permiten `GET` y `HEAD`. Crear, editar, cancelar y
+desactivar permiten `GET` para mostrar el formulario y `POST` para guardarlo;
+confirmar y finalizar requieren `POST`. `AutenticacionViewSet` agrupa `/ingresar/`
+y `/salir/`, reutilizando las vistas de Django para conservar la sesión, la
+protección CSRF y la validación de las redirecciones. Las pantallas protegidas
+siguen enviando al formulario de acceso a quienes no han iniciado sesión.
 
 ## Modelos y CRUD de coworking
 
@@ -137,14 +482,15 @@ Después de actualizar los archivos, ejecuta desde la carpeta que contiene `mana
 
 ```powershell
 python manage.py migrate
+python manage.py loaddata sedes tipos_espacio
 python manage.py createsuperuser
 python manage.py runserver
 ```
 
 Si ya tienes una cuenta de superusuario, puedes utilizarla. Su perfil `Usuario` se crea con rol `ADMINISTRADOR` al acceder por primera vez al CRUD. La autenticación utiliza la cuenta existente de Django mediante una relación uno a uno; no se cambia `AUTH_USER_MODEL` ni se reemplazan sus tablas.
 
-1. Entra en `/gestion-interna/` con el superusuario y crea al menos una sede y un tipo de espacio. Si configuraste `DJANGO_ADMIN_URL_PATH`, utiliza esa ruta administrativa.
-2. Entra en `/ingresar/` con el nombre de acceso y la contraseña del superusuario.
+1. Entra en `/ingresar/` con el nombre de acceso y la contraseña del superusuario.
+2. Si cargaste los [datos iniciales](#datos-iniciales-fixtures), ya tienes sedes y tipos de espacio. Si no, crea al menos una sede en `/sedes/nueva/` y un tipo en `/tipos-espacio/nuevo/`.
 3. Crea espacios desde `/espacios/nuevo/` y usuarios desde `/usuarios/nuevo/`.
 4. Los miembros pueden ingresar con las credenciales asignadas y crear reservas desde `/reservas/nueva/`.
 
@@ -156,6 +502,14 @@ El formulario de usuario crea también su cuenta de acceso. Las contraseñas se 
 | --- | --- | --- |
 | `/ingresar/` | Inicio de sesión | Público |
 | `/salir/` | Cierre de sesión mediante POST | Autenticado |
+| `/sedes/` | Listado de sedes | Administrador |
+| `/sedes/nueva/` | Crear sede | Administrador |
+| `/sedes/<id>/editar/` | Editar sede | Administrador |
+| `/sedes/<id>/desactivar/` | Confirmar la desactivación | Administrador |
+| `/tipos-espacio/` | Listado de tipos de espacio | Administrador |
+| `/tipos-espacio/nuevo/` | Crear tipo | Administrador |
+| `/tipos-espacio/<id>/editar/` | Editar tipo | Administrador |
+| `/tipos-espacio/<id>/eliminar/` | Eliminar un tipo sin espacios | Administrador |
 | `/usuarios/` | Listado de usuarios | Administrador |
 | `/usuarios/nuevo/` | Crear usuario y cuenta | Administrador |
 | `/usuarios/<id>/editar/` | Editar datos y rol | Administrador |
@@ -171,6 +525,7 @@ El formulario de usuario crea también su cuenta de acceso. Las contraseñas se 
 | `/reservas/<id>/cancelar/` | Cancelar indicando un motivo | Titular o administrador |
 | `/reservas/<id>/confirmar/` | Confirmar mediante POST | Administrador |
 | `/reservas/<id>/finalizar/` | Finalizar mediante POST | Administrador |
+| `/reportes/` | Descargar reportes en PDF o Excel | Administrador |
 
 Las pantallas incluyen protección CSRF. Los formularios de baja muestran una confirmación; solo POST modifica datos. El miembro no puede cambiar el titular de su reserva ni acceder a reservas ajenas. Las observaciones privadas del espacio se muestran únicamente al administrador.
 
@@ -182,12 +537,13 @@ Las pantallas incluyen protección CSRF. Los formularios de baja muestran una co
 - El fin debe ser posterior al inicio. La cantidad de personas debe ser positiva y no superar la capacidad del espacio.
 - Las reservas pendientes y confirmadas bloquean su intervalo. Una reserva que termina exactamente cuando empieza otra no se solapa. Las reservas canceladas y finalizadas no bloquean disponibilidad.
 - Cada reserva creada por el CRUD incluye un estado inicial en el historial. Cada transición agrega el estado anterior, el nuevo, la fecha, el responsable y el motivo.
+- Las sedes se desactivan: sus espacios dejan de aceptar reservas nuevas y las existentes se conservan. Un tipo de espacio solo se elimina si no tiene espacios; la auditoría conserva sus valores.
 - Usuarios y espacios utilizan baja lógica. Las reservas se cancelan y sus registros se conservan. Desactivar un usuario también impide su acceso mediante la cuenta de Django; sus reservas existentes se conservan.
 - `guardar(actor)` en los modelos aplica validaciones, permisos y auditoría dentro de una transacción. Para cambiar el estado de una reserva, utiliza `confirmar`, `cancelar` o `finalizar`. No uses `save()` o `QuerySet.update()` para ejecutar operaciones de negocio: esas operaciones de Django no aplican el flujo completo.
 
-SQLite utiliza transacciones `IMMEDIATE` para serializar las escrituras antes de comprobar la disponibilidad. Los métodos vuelven a validar al guardar, aunque el formulario ya haya pasado su validación.
+Antes de comprobar la disponibilidad, `guardar` bloquea la fila del espacio con `SELECT ... FOR UPDATE` en MySQL/MariaDB, de modo que dos reservas simultáneas del mismo espacio se validan una después de la otra. Los métodos vuelven a validar al guardar, aunque el formulario ya haya pasado su validación.
 
-En Django Admin, los catálogos Sede y TipoEspacio se pueden gestionar. Usuario, Espacio, Reserva, HistorialEstadoReserva y EventoAuditoria se registran para consulta; sus cambios se realizan mediante el CRUD para aplicar las reglas y la auditoría.
+En Django Admin todos los modelos, incluidos los catálogos Sede y TipoEspacio, se registran para consulta; sus cambios se realizan mediante el CRUD para aplicar las reglas, los permisos y la auditoría.
 
 ### Migraciones y datos existentes
 
@@ -197,21 +553,57 @@ Las migraciones nuevas renombran `Espacio.descripcion` a `descripcion_publica` y
 
 Las cuentas existentes reciben un perfil de usuario. Si una cuenta carece de correo o comparte el mismo correo con otra, su perfil recibe un correo temporal único terminado en `@example.invalid`; el administrador debe corregirlo. El correo de la cuenta original se conserva durante la migración.
 
-Al revertir al esquema anterior, las reservas vuelven a referenciar cuentas Django. Las reservas pendientes pasan a confirmadas porque el esquema anterior no incluía el estado pendiente. Revertir elimina las tablas nuevas de perfiles, historial y auditoría; conserva primero una copia de la base de datos si necesitas esos registros.
+Al revertir al esquema anterior, las reservas vuelven a referenciar cuentas Django; la clave foránea se recrea después de convertir los identificadores, porque MySQL la valida de inmediato. Las reservas pendientes pasan a confirmadas porque el esquema anterior no incluía el estado pendiente. Revertir elimina las tablas nuevas de perfiles, historial y auditoría; conserva primero una copia de la base de datos si necesitas esos registros.
 
 ### Servicio de reportes
 
 `ServicioReportes.buscarReservas(filtros, actor)` acepta `usuario_id`, `espacio_id`, `estado`, `desde` y `hasta`. Los miembros siempre reciben únicamente sus propias reservas. Los filtros de fechas incluyen reservas que se cruzan con el período.
 
-Los métodos `calcularUsoEspacios`, `resumirActividad` y `analizarUsuarios` requieren un administrador y un período con fin posterior al inicio. El uso de espacios suma horas confirmadas o finalizadas, recortadas al período solicitado. Los reportes están disponibles desde Python; esta primera entrega no incluye una pantalla de reportes ni una API REST.
+Los métodos `calcularUsoEspacios`, `resumirActividad` y `analizarUsuarios` requieren un administrador y un período con fin posterior al inicio. El uso de espacios suma horas confirmadas o finalizadas, recortadas al período solicitado.
+
+### Descargar reportes en PDF o Excel
+
+Los administradores descargan reportes desde la pantalla `/reportes/` (enlace
+**Reportes** del menú) o desde la API `GET /api/reportes/`. Ambas validan los
+parámetros con `ReporteForm` y generan el archivo con `ServicioReportes.generarDocumento`.
+
+| Parámetro | Valores | Uso |
+| --- | --- | --- |
+| `tipo` | `reservas` o `diario` | Detalle de reservas, o uso diario (reservas y horas) por espacio. |
+| `formato` | `pdf` o `xlsx` | Documento PDF o libro Excel. |
+| `desde`, `hasta` | Fecha `AAAA-MM-DD` | Período; `hasta` incluye el día completo. Obligatorio para `diario` (máximo 366 días). |
+| `usuario`, `espacio` | ID | Opcional, solo para `reservas`. |
+| `estado` | `pendiente`, `confirmada`, `cancelada` o `finalizada` | Opcional, solo para `reservas`. |
+
+Por ejemplo, con la sesión iniciada como administrador:
+
+```text
+/api/reportes/?tipo=diario&formato=xlsx&desde=2026-10-01&hasta=2026-10-31
+```
+
+La respuesta es el archivo adjunto (`reporte-diario.xlsx` o `reporte-reservas.pdf`).
+Los parámetros inválidos devuelven HTTP 400 con los errores por campo y los
+miembros reciben HTTP 403. Las horas se muestran en la zona horaria del proyecto.
 
 ### Pruebas
+
+Todas las pruebas están en la carpeta `tests/` de la raíz del proyecto, separadas
+de `cowork/` y `drf/`. Los archivos se agrupan por tema: configuración, páginas
+y catálogos, gestión, modelos, migraciones, reportes, API MySQL y ViewSets.
 
 ```powershell
 python manage.py check
 python manage.py makemigrations --check --dry-run
 python manage.py test
 ```
+
+Las pruebas se ejecutan sobre MySQL/MariaDB: Django crea la base temporal
+`test_<MYSQL_DATABASE>` y la elimina al terminar, sin tocar los datos de la base
+principal. El usuario de `.env` necesita permisos sobre esa base (el contenedor
+los concede solo; con un servidor instalado, ver el `GRANT` de la opción B).
+
+Puedes ejecutar la carpeta completa con `python manage.py test tests` o un solo
+módulo, por ejemplo `python manage.py test tests.test_gestion`.
 
 Las pruebas cubren el acceso por rol, la privacidad de reservas y espacios, el CRUD, CSRF, correo único, capacidad, solapamientos, transiciones, historial, auditoría y conservación de datos al migrar y revertir.
 
@@ -224,20 +616,20 @@ drf/urls.py recibe la petición e incluye las rutas de cowork
     ↓
 cowork/urls.py busca una coincidencia
     ↓
-cowork/views.py ejecuta la vista asociada
+cowork/views.py ejecuta la acción del ViewSet asociado
     ↓
 render() carga una plantilla desde cowork/templates/cowork/, que extiende cowork/base.html
     ↓
 Django devuelve una respuesta HTTP al navegador
 ```
 
-Si ninguna ruta coincide, Django utiliza `handler404`, ejecuta la vista `error_404` y devuelve `cowork/404.html` con estado HTTP 404.
+Si ninguna ruta coincide, Django utiliza `handler404`, ejecuta `Error404ViewSet.retrieve` y devuelve `cowork/404.html` con estado HTTP 404.
 
 ## Organización de las rutas
 
 `drf/urls.py` es el enrutador principal del proyecto. Mantiene la ruta administrativa, el controlador global del error 404 y utiliza `include()` para delegar las rutas públicas a la aplicación.
 
-`cowork/urls.py` contiene las rutas propias de `cowork`: la bienvenida y el inicio. De esta manera, el núcleo decide a qué aplicación enviar la petición y cada aplicación administra sus propios endpoints.
+`cowork/urls.py` concentra todas las rutas de la aplicación: páginas públicas, autenticación, gestión HTML y las APIs JSON. Las pantallas se declaran con `path()`; las APIs se registran en dos `DefaultRouter` (`enrutador` y `enrutador_mysql`), incluidos con los namespaces `api` y `api_mysql`. `drf/urls.py` incluye únicamente este archivo para las rutas de cowork, además de la ruta administrativa y el controlador global del error 404.
 
 ## Dependencias
 
@@ -246,6 +638,12 @@ Las dependencias utilizadas están registradas en `requirements.txt`:
 - **Django:** framework principal que recibe las peticiones y relaciona rutas, vistas y plantillas.
 - **asgiref:** dependencia de Django que proporciona compatibilidad con ASGI y ejecución asíncrona.
 - **sqlparse:** dependencia utilizada por Django para analizar y dar formato a instrucciones SQL.
+- **mysqlclient:** controlador recomendado por Django para conectarse a MySQL/MariaDB.
+- **SQLAlchemy:** ORM utilizado por la API de consulta `/api/mysql/`.
+- **tzdata:** base de zonas horarias de Python; necesaria en Windows, que no la incluye en el sistema.
+- **openpyxl y reportlab:** generan los reportes en Excel y PDF.
+- **djangorestframework:** serializers y ViewSets de las APIs JSON.
+- **python-decouple:** lee la `SECRET_KEY` y las credenciales de la base de datos desde `.env`.
 - **Bootstrap 5.3.3:** se carga desde `cowork/static/cowork/vendor/bootstrap/` en `cowork/base.html` y aporta la grilla responsive y utilidades de interfaz. Se incluye su licencia MIT y los archivos oficiales CSS y JavaScript.
 
 ## Frontend y sistema visual
@@ -263,8 +661,7 @@ Se recomienda mantener esta base hasta que la aplicación necesite una interfaz 
 ## Archivos excluidos de Git
 
 - `.venv/`: contiene el ambiente virtual local.
-- `db.sqlite3`: contiene la base de datos local.
-- `.env`: puede contener variables privadas.
+- `.env`: contiene la `SECRET_KEY` y las credenciales de la base de datos. Se versiona solo `.env.example`.
 - `__pycache__/` y `*.pyc`: archivos temporales generados por Python.
 
 ## Detener el servidor

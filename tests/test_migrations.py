@@ -1,3 +1,5 @@
+"""Pruebas de conservación de datos al aplicar y revertir migraciones."""
+
 from datetime import timedelta
 
 from django.conf import settings
@@ -9,7 +11,7 @@ from django.utils import timezone
 
 class MigracionDiagramaTests(TransactionTestCase):
     anterior = [('cowork', '0002_espacio_y_reserva')]
-    actual = [('cowork', '0004_interaccion_del_usuario')]
+    actual = [('cowork', '0005_administrador_diagrama')]
 
     def migrar(self, destino):
         executor = MigrationExecutor(connection)
@@ -52,6 +54,9 @@ class MigracionDiagramaTests(TransactionTestCase):
         self.assertEqual(Usuario.objects.get(cuenta_id=primera.pk).correo, 'repetido@example.com')
         self.assertTrue(Usuario.objects.get(cuenta_id=segunda.pk).correo.endswith('@example.invalid'))
         self.assertEqual(apps.get_model('cowork', 'HistorialEstadoReserva').objects.filter(reserva_id=reserva.pk).count(), 1)
+        Administrador = apps.get_model('cowork', 'Administrador')
+        self.assertTrue(Administrador._meta.proxy)
+        self.assertEqual(Administrador._meta.db_table, Usuario._meta.db_table)
 
         # Los perfiles nuevos pueden tener una clave distinta de su cuenta.
         cuenta_nueva = Cuenta.objects.create(username='nueva', email='nueva@example.com')
