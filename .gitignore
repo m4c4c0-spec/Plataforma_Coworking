@@ -4,7 +4,6 @@
 __pycache__/
 *.pyc
 db.sqlite3
-.env
 .env.mysql
 
 # Documentación local de los modelos y su correspondencia con el diagrama.
