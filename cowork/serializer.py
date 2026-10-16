@@ -1,4 +1,4 @@
-"""Validación de escritura para la API de gestión de la base principal."""
+"""Serializers de la API de gestión de la base principal."""
 
 from datetime import timezone
 
@@ -6,7 +6,7 @@ from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
 
 from .forms import UsuarioForm
-from .models import Espacio, Reserva, Sede, TipoEspacio, Usuario
+from .models import Espacio, EventoAuditoria, HistorialEstadoReserva, Reserva, Sede, TipoEspacio, Usuario
 
 
 class GuardarModelSerializer(serializers.ModelSerializer):
@@ -126,3 +126,27 @@ class ReservaGestionSerializer(GuardarModelSerializer):
 
 class CancelacionSerializer(serializers.Serializer):
     motivo = serializers.CharField()
+
+
+# El historial y la auditoría son registros: la API solo los consulta.
+
+
+class HistorialEstadoReservaSerializer(serializers.ModelSerializer):
+    fecha_cambio = serializers.DateTimeField(read_only=True, default_timezone=timezone.utc)
+
+    class Meta:
+        model = HistorialEstadoReserva
+        fields = ['id', 'reserva', 'estado_anterior', 'estado_nuevo', 'responsable', 'fecha_cambio', 'motivo']
+        read_only_fields = fields
+
+
+class EventoAuditoriaSerializer(serializers.ModelSerializer):
+    fecha = serializers.DateTimeField(read_only=True, default_timezone=timezone.utc)
+
+    class Meta:
+        model = EventoAuditoria
+        fields = [
+            'id', 'actor', 'fecha', 'accion', 'tipo_entidad', 'id_entidad',
+            'valores_anteriores', 'valores_nuevos',
+        ]
+        read_only_fields = fields

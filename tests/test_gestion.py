@@ -225,11 +225,34 @@ class UsuariosEspaciosReportesTests(DatosCoworkTests):
             ajena.cancelar(self.miembro, 'Rol falsificado')
         self.assertFalse(ServicioReportes.buscarReservas({}, self.miembro).exists())
 
-    def test_administrador_puede_desactivarse_con_la_misma_instancia(self):
-        self.admin.desactivar(self.admin)
+    def test_administrador_no_puede_desactivarse_ni_quitarse_el_rol(self):
+        with self.assertRaisesMessage(ValidationError, 'propia cuenta'):
+            self.admin.desactivar(self.admin)
+        self.admin.rol = Usuario.Rol.MIEMBRO
+        with self.assertRaisesMessage(ValidationError, 'rol de administrador'):
+            self.admin.guardar(self.admin)
         self.admin.refresh_from_db()
-        self.assertFalse(self.admin.activo)
-        self.assertFalse(self.admin.cuenta.is_active)
+        self.assertTrue(self.admin.activo)
+        self.assertTrue(self.admin.cuenta.is_active)
+        self.assertEqual(self.admin.rol, Usuario.Rol.ADMINISTRADOR)
+        # Sí puede desactivar a otros usuarios.
+        self.miembro.desactivar(self.admin)
+        self.miembro.refresh_from_db()
+        self.assertFalse(self.miembro.activo)
+        self.assertFalse(self.miembro.cuenta.is_active)
+
+    def test_activar_usuario_devuelve_el_acceso_y_audita(self):
+        self.miembro.desactivar(self.admin)
+        with self.assertRaises(PermissionDenied):
+            self.miembro.activar(self.otro)
+        self.miembro.activar(self.admin)
+        self.miembro.cuenta.refresh_from_db()
+        self.assertTrue(self.miembro.activo)
+        self.assertTrue(self.miembro.cuenta.is_active)
+        eventos = EventoAuditoria.objects.filter(tipo_entidad='usuario', id_entidad=self.miembro.pk)
+        self.assertEqual(
+            [evento.valores_nuevos['activo'] for evento in eventos.order_by('pk')], [False, True],
+        )
 
     def test_baja_espacio_y_limite_capacidad(self):
         reserva = self.nueva_reserva()
@@ -389,6 +412,19 @@ class PantallasCrudTests(DatosCoworkTests):
         espacio.refresh_from_db()
         self.assertEqual(espacio.estado, Espacio.Estado.INACTIVO)
 
+    def test_admin_no_ve_desactivar_en_su_fila_ni_puede_quitarse_el_rol(self):
+        self.client.force_login(self.admin.cuenta)
+        usuarios = self.client.get(reverse('usuarios'))
+        self.assertNotContains(usuarios, reverse('usuario_desactivar', args=[self.admin.pk]))
+        self.assertContains(usuarios, reverse('usuario_desactivar', args=[self.miembro.pk]))
+        response = self.client.post(reverse('usuario_editar', args=[self.admin.pk]), {
+            'nombre': 'admin', 'apellido': '', 'correo': 'admin@example.com',
+            'rol': 'MIEMBRO', 'nombre_usuario': 'admin', 'password': '',
+        })
+        self.assertContains(response, 'quitarte el rol de administrador')
+        self.admin.refresh_from_db()
+        self.assertEqual(self.admin.rol, Usuario.Rol.ADMINISTRADOR)
+
     def test_desactivar_usuario_por_post_cierra_acceso_existente(self):
         self.client.force_login(self.admin.cuenta)
         url = reverse('usuario_desactivar', args=[self.miembro.pk])
@@ -398,6 +434,20 @@ class PantallasCrudTests(DatosCoworkTests):
         self.assertRedirects(self.client.post(url), reverse('usuarios'))
         self.client.force_login(self.miembro.cuenta)
         self.assertEqual(self.client.get(reverse('reservas')).status_code, 302)
+
+    def test_activar_usuario_por_post_devuelve_el_acceso(self):
+        self.miembro.desactivar(self.admin)
+        self.client.force_login(self.admin.cuenta)
+        url = reverse('usuario_activar', args=[self.miembro.pk])
+        self.assertContains(self.client.get(reverse('usuarios')), url)
+        self.assertNotContains(self.client.get(reverse('usuarios')), reverse('usuario_activar', args=[self.otro.pk]))
+        self.assertContains(self.client.get(url), 'btn-success')
+        self.miembro.refresh_from_db()
+        self.assertFalse(self.miembro.activo)
+        self.assertRedirects(self.client.post(url), reverse('usuarios'))
+        self.miembro.refresh_from_db()
+        self.assertTrue(self.miembro.activo)
+        self.assertTrue(self.client.login(username='miembro', password='ClaveSegura-739!'))
 
     def test_creacion_requiere_token_csrf(self):
         cliente = Client(enforce_csrf_checks=True, HTTP_HOST='localhost')

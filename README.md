@@ -49,7 +49,22 @@ podman compose down -v  # eliminar contenedor y datos
 ```
 
 La base y el usuario se crean solos la primera vez. Si hay otro MySQL/MariaDB
-usando el puerto 3306, detenlo o cambia `MYSQL_PORT` en `.env`.
+usando el puerto 3306, detenlo o cambia `PORT` en `.env`.
+
+#### Administración visual con phpMyAdmin
+
+`compose.yaml` también levanta **phpMyAdmin** en <http://127.0.0.1:8081/>. Ingresa
+con `USER` y `PASSWORD` de `.env` para ver las tablas (`cowork_sede`,
+`cowork_espacio`, `cowork_reserva`, etc.), sus registros y su estructura, ejecutar
+consultas SQL o exportar la base. Si el puerto 8081 está ocupado, define
+`PHPMYADMIN_PORT` en `.env`.
+
+Úsalo principalmente para **consultar**. Los cambios hechos directamente en las
+tablas no pasan por `guardar(actor)`: no validan capacidad ni solapamientos, no
+registran historial ni auditoría y pueden dejar datos inconsistentes. Para crear,
+editar o dar de baja registros, utiliza las pantallas o la API de la aplicación.
+Con un servidor instalado (opción B) puedes usar en su lugar HeidiSQL, MySQL
+Workbench, DBeaver o el phpMyAdmin de WampServer.
 
 ### Opción B: servidor instalado en el equipo
 
@@ -114,16 +129,19 @@ cp -n .env.example .env
 chmod 600 .env
 ```
 
-Completa `SECRET_KEY` y `MYSQL_PASSWORD` en `.env` (ver
+Completa `SECRET_KEY` y `PASSWORD` en `.env` (ver
 [Datos sensibles y archivo .env](#datos-sensibles-y-archivo-env)), levanta la base
 (ver [Base de datos MySQL/MariaDB](#base-de-datos-mysqlmariadb)) y crea las tablas:
 
 ```bash
-podman compose up -d
-python manage.py migrate
-python manage.py loaddata sedes tipos_espacio
-python manage.py createsuperuser
+env -u USER podman compose up -d
+env -u USER python manage.py migrate
+env -u USER python manage.py loaddata sedes tipos_espacio
+env -u USER python manage.py createsuperuser
 ```
+
+En Linux, `env -u USER` evita que la variable `USER` del sistema reemplace la de
+`.env` (ver [Datos sensibles y archivo .env](#datos-sensibles-y-archivo-env)).
 
 Si `.venv` ya existe y fue creado en este equipo con una versión compatible de Python, omite su creación. Un ambiente virtual de Windows no se puede reutilizar en Linux.
 
@@ -131,12 +149,12 @@ Para iniciar cada nueva sesión de desarrollo:
 
 ```bash
 cd /ruta/al/Plataforma_Coworking
-podman compose up -d
+env -u USER podman compose up -d
 source .venv/bin/activate
-python manage.py runserver
+env -u USER python manage.py runserver
 ```
 
-Abre <http://127.0.0.1:8000/>. El proyecto mantiene `DEBUG=False` y su comando `runserver` sirve los archivos estáticos durante el desarrollo. Bootstrap está incluido en el repositorio, por lo que el diseño funciona sin conexión a un CDN. No necesitas configurar `DJANGO_DEBUG`.
+Abre <http://127.0.0.1:8000/>. El proyecto mantiene `DEBUG=False` y su comando `runserver` sirve los archivos estáticos durante el desarrollo. Bootstrap está incluido en el repositorio, por lo que el diseño funciona sin conexión a un CDN. `DEBUG` se lee desde `.env` y vale `False` si no lo defines.
 
 Detén el servidor con `Ctrl+C` y cierra la sesión del ambiente con:
 
@@ -185,9 +203,8 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 python -m pip install -r requirements.txt
 ```
 
-En Windows, pip descarga `mysqlclient` ya compilado. Si pip intenta compilarlo y
-falla, utiliza una versión de Python para la que `mysqlclient` publique paquetes
-de Windows (por ejemplo, 3.12 o 3.13).
+En Windows, pip descarga `mysqlclient` ya compilado: la versión 2.3.0 publica
+paquetes para Python 3.12, 3.13 y 3.14 de 64 bits. No necesitas instalar un compilador.
 
 ### 4. Crear el archivo de ambiente
 
@@ -195,7 +212,7 @@ de Windows (por ejemplo, 3.12 o 3.13).
 Copy-Item .env.example .env
 ```
 
-Completa `SECRET_KEY` y `MYSQL_PASSWORD` en `.env` (ver [Datos sensibles y archivo .env](#datos-sensibles-y-archivo-env)).
+Completa `SECRET_KEY` y `PASSWORD` en `.env` (ver [Datos sensibles y archivo .env](#datos-sensibles-y-archivo-env)).
 
 ### 5. Levantar la base de datos y crear las tablas
 
@@ -238,9 +255,52 @@ hechos desde el CRUD. Ejecútalo solo en una base nueva. `loaddata` guarda los
 registros directamente, sin pasar por `guardar(actor)`, por lo que la carga no
 genera eventos de auditoría.
 
-Los usuarios, espacios y reservas no se incluyen: los usuarios necesitan una cuenta
-de Django con contraseña (`createsuperuser` o el CRUD) y los espacios se crean
-desde `/espacios/nuevo/` usando estas sedes y tipos.
+### Datos de demostración (opcional)
+
+Para probar el flujo completo sin crear registros a mano, hay tres fixtures más
+con usuarios, espacios y reservas de ejemplo:
+
+```bash
+python manage.py loaddata sedes tipos_espacio usuarios_demo espacios_demo reservas_demo
+```
+
+| Archivo | Contenido |
+| --- | --- |
+| `usuarios_demo.json` | 5 cuentas de Django con su perfil `Usuario` |
+| `espacios_demo.json` | 8 espacios en las 4 sedes: disponibles, uno en mantenimiento y uno inactivo |
+| `reservas_demo.json` | 12 reservas en los 4 estados, con su historial de estados |
+
+Todas las cuentas usan la contraseña **`Coworking-Demo-2026`** (guardada cifrada en el JSON):
+
+| Usuario | Rol | Para probar |
+| --- | --- | --- |
+| `admin_demo` | Administrador (también entra en Django Admin) | Confirmar, finalizar, gestionar catálogos y descargar reportes |
+| `ana_demo` | Miembro | Ver, crear, editar y cancelar sus reservas |
+| `bruno_demo` | Miembro | Reservas pendientes y confirmadas propias |
+| `carla_demo` | Miembro | Reservas pendientes, confirmadas y canceladas propias |
+| `diego_demo` | Miembro inactivo | El ingreso es rechazado; sus reservas se conservan |
+
+Recorrido sugerido:
+
+1. Ingresa como `ana_demo`: en `/reservas/` ves solo tus 4 reservas y en
+   `/espacios/` no aparecen los espacios en mantenimiento ni inactivos.
+2. Crea una reserva en la Sala Andes el 3 de noviembre de 2026 entre las 10:00
+   y las 11:00: se rechaza porque se solapa con reservas existentes.
+3. Ingresa como `admin_demo`, abre una reserva pendiente y confírmala; el
+   detalle muestra el historial con el responsable de cada cambio.
+4. En `/reportes/` descarga el uso diario del 1 al 8 de octubre de 2026: incluye
+   las reservas finalizadas de esas fechas.
+
+Las fechas de las reservas son fijas: las vigentes están entre octubre y
+noviembre de 2026 y las finalizadas entre septiembre y octubre de 2026. Los
+registros usan identificadores desde 101, para no sobrescribir cuentas creadas
+con `createsuperuser`. `loaddata` no genera eventos de auditoría; las acciones
+que realices después en la aplicación sí los registran. **Usa estos datos solo
+en bases de desarrollo o de prueba**: las contraseñas de demostración son públicas.
+
+Los usuarios, espacios y reservas reales no se incluyen en los fixtures base:
+los usuarios necesitan una cuenta de Django con contraseña (`createsuperuser` o
+el CRUD) y los espacios se crean desde `/espacios/nuevo/` usando estas sedes y tipos.
 
 ## Datos sensibles y archivo .env
 
@@ -265,13 +325,20 @@ SECRET_KEY='clave_generada'
 | Variable | Obligatoria | Uso |
 | --- | --- | --- |
 | `SECRET_KEY` | Sí | Clave criptográfica de Django. |
-| `MYSQL_DATABASE`, `MYSQL_USER` | Sí | Base y usuario de la aplicación. |
-| `MYSQL_PASSWORD` | Sí | Contraseña del usuario de la aplicación. |
-| `MYSQL_HOST`, `MYSQL_PORT` | No | Servidor MySQL/MariaDB; por defecto `127.0.0.1:3306`. |
-| `DJANGO_ADMIN_URL_PATH` | No | Ruta del administrador; por defecto `gestion-interna`. |
+| `DEBUG` | No | `False` por defecto; mantiene la página 404 personalizada. |
+| `NAME`, `USER` | Sí | Base y usuario de la aplicación (los mismos nombres de la guía). |
+| `PASSWORD` | Sí | Contraseña del usuario de la aplicación. |
+| `HOST`, `PORT` | No | Servidor MySQL/MariaDB; por defecto `127.0.0.1:3306`. |
 
 Si falta una variable obligatoria, Django se detiene indicando su nombre. Una
 variable definida en la terminal tiene prioridad sobre el valor de `.env`.
+
+**Linux y macOS:** el sistema ya define `USER` con el usuario de la sesión, y por
+esa prioridad Django lo usaría en lugar del de `.env` (la conexión falla con
+*Access denied for user '<tu usuario>'*). Ejecuta los comandos de Django y de
+compose con `env -u USER`, por ejemplo `env -u USER python manage.py runserver`
+o `env -u USER podman compose up -d`. En Windows no hace falta, porque el sistema
+usa `USERNAME` y no `USER`.
 
 ## Consultar MySQL con SQLAlchemy y convertir los datos a JSON
 
@@ -334,7 +401,7 @@ import json
 from sqlalchemy import select
 from cowork.database import sesion_mysql
 from cowork.models_sqlalchemy import SedeSQL
-from cowork.serializers import SedeSerializer
+from cowork.serializers_mysql import SedeSerializer
 
 with sesion_mysql() as sesion:
     sedes = sesion.scalars(select(SedeSQL).order_by(SedeSQL.id).limit(100)).all()
@@ -354,7 +421,7 @@ python manage.py test tests.test_api_mysql --noinput
 ```
 
 Archivos principales: `cowork/database.py`, `cowork/models_sqlalchemy.py`,
-`cowork/serializers.py`, `cowork/views.py` y `cowork/urls.py`.
+`cowork/serializers_mysql.py`, `cowork/views.py` y `cowork/urls.py`.
 
 Los ViewSets de consulta están en `cowork/views.py`. Se registran en el router
 `enrutador_mysql` (`DefaultRouter`) de `cowork/urls.py` y se incluyen bajo
@@ -367,29 +434,57 @@ y [serializers de Django REST Framework](https://www.django-rest-framework.org/a
 ## Guardar mediante ViewSets y DefaultRouter
 
 Los ViewSets de gestión también están en **`cowork/views.py`**, dentro de la
-aplicación. `cowork/urls.py` los registra en un `routers.DefaultRouter`
+aplicación. Heredan de `viewsets.ModelViewSet` (con `queryset` y `serializer_class`,
+como en la guía) junto con `ReglasGestion`, que agrega la autenticación, los
+permisos por acción y el borrado mediante `eliminar(actor)`. Sus serializers están
+en `cowork/serializer.py`. `cowork/urls.py` los registra en un `routers.DefaultRouter`
 (`enrutador.register(r'sedes', views.SedeViewSet, basename='sede')`, etc.) y
-incluye sus rutas bajo `/api/`. El router genera las rutas de los métodos que
-implementa cada ViewSet y de sus acciones `@action` (desactivar, confirmar,
-cancelar y finalizar). `/api/` muestra la raíz de la API con el enlace de cada
-recurso. Los identificadores usan el conversor `int`, igual que las pantallas. Utilizan la base principal MySQL/MariaDB, la misma
-de las pantallas de gestión y de la API de consulta `/api/mysql/`.
+incluye sus rutas bajo `/cowork/` (por ejemplo `/cowork/sedes/`), como indica la guía. El router genera las rutas de los métodos que
+implementa cada ViewSet y de sus acciones `@action` (activar, desactivar,
+confirmar, cancelar y finalizar). `/cowork/` muestra la raíz de la API con el enlace de cada
+recurso. Los identificadores usan el conversor `int`, igual que las pantallas.
+Utilizan la base principal MySQL/MariaDB, la misma de las pantallas de gestión y
+de la API de consulta `/api/mysql/`.
 
-| Recurso | Listar y crear | Consultar y editar | Acciones POST por ID |
+| Recurso | Listar y crear | Consultar, editar y eliminar | Acciones POST por ID |
 | --- | --- | --- | --- |
-| Sedes | `/api/sedes/` | `/api/sedes/1/` | `/api/sedes/1/desactivar/` |
-| Tipos de espacio | `/api/tipos-espacio/` | `/api/tipos-espacio/1/` | `DELETE /api/tipos-espacio/1/` |
-| Usuarios | `/api/usuarios/` | `/api/usuarios/1/` | `/api/usuarios/1/desactivar/` |
-| Espacios | `/api/espacios/` | `/api/espacios/1/` | `/api/espacios/1/desactivar/` |
-| Reservas | `/api/reservas/` | `/api/reservas/1/` | `/api/reservas/1/confirmar/`, `/api/reservas/1/cancelar/`, `/api/reservas/1/finalizar/` |
+| Sedes | `/cowork/sedes/` | `/cowork/sedes/1/` | `/cowork/sedes/1/desactivar/` |
+| Tipos de espacio | `/cowork/tipos-espacio/` | `/cowork/tipos-espacio/1/` | |
+| Usuarios | `/cowork/usuarios/` | `/cowork/usuarios/1/` | `/cowork/usuarios/1/desactivar/`, `/cowork/usuarios/1/activar/` |
+| Espacios | `/cowork/espacios/` | `/cowork/espacios/1/` | `/cowork/espacios/1/desactivar/` |
+| Reservas | `/cowork/reservas/` | `/cowork/reservas/1/` | `/cowork/reservas/1/confirmar/`, `/cowork/reservas/1/cancelar/`, `/cowork/reservas/1/finalizar/` |
+| Historial de reservas (solo consulta) | `/cowork/historial-reservas/` | `/cowork/historial-reservas/1/` | |
+| Eventos de auditoría (solo consulta) | `/cowork/eventos-auditoria/` | `/cowork/eventos-auditoria/1/` | |
 
-Usa `GET` para consultar, `POST` sobre la colección para crear, y `PUT` o `PATCH`
-sobre el detalle para editar. Crear devuelve HTTP 201; editar y ejecutar acciones
-devuelve HTTP 200. Las bajas conservan los registros: se desactivan sedes,
-usuarios y espacios, y se cancelan reservas; en esos recursos `DELETE` devuelve
-HTTP 405. Un tipo de espacio sin espacios asociados se elimina con `DELETE`
-(HTTP 204); si tiene espacios devuelve HTTP 400. Los administradores gestionan
-los catálogos y los miembros solo consultan las sedes activas y los tipos.
+Usa `GET` para consultar, `POST` sobre la colección para crear, `PUT` o `PATCH`
+sobre el detalle para editar y `DELETE` sobre el detalle para eliminar. Crear
+devuelve HTTP 201; editar y ejecutar acciones devuelven HTTP 200 y eliminar
+devuelve HTTP 204. Los administradores gestionan los catálogos y los miembros
+solo consultan las sedes activas y los tipos.
+
+El historial y la auditoría son registros que escriben las propias operaciones,
+por eso sus ViewSets heredan de `viewsets.ReadOnlyModelViewSet`: solo permiten
+`GET` y cualquier otro método responde HTTP 405. El historial lo consultan el
+administrador (todo) y el miembro (solo el de sus reservas); la auditoría
+requiere el permiso `ver_auditoria`, que solo tiene el administrador.
+
+#### Eliminación protegida
+
+`DELETE` borra el registro de la base solo si no rompe datos relacionados; en
+caso contrario devuelve HTTP 400 con el motivo y la alternativa:
+
+| Recurso | Se elimina cuando | Si no se puede |
+| --- | --- | --- |
+| Sede | No tiene espacios | Desactivarla (`desactivar/`) o eliminar antes sus espacios |
+| Tipo de espacio | No tiene espacios | Mantenerlo |
+| Espacio | No tiene reservas | Inactivarlo (`desactivar/`) para conservar su historial |
+| Usuario | No tiene reservas ni acciones en la auditoría o el historial, y no es quien elimina | Desactivarlo (`desactivar/`) |
+| Reserva | Está `pendiente` o `cancelada` | Cancelar primero una confirmada; las finalizadas se conservan para los reportes |
+
+Eliminar un usuario borra también su cuenta de acceso de Django. Eliminar una
+reserva borra también su historial de estados. Cada eliminación registra un
+evento `eliminar` en la auditoría con los valores que tenía el registro. El
+titular puede eliminar sus propias reservas; el resto requiere un administrador.
 
 Los administradores activos gestionan usuarios y espacios, y confirman o
 finalizan reservas. Los miembros activos pueden consultar espacios disponibles
@@ -398,7 +493,7 @@ métodos del modelo para aplicar permisos, validaciones, historial y auditoría.
 Los errores de validación devuelven HTTP 400 con los campos correspondientes.
 
 Después de iniciar sesión en `/ingresar/`, un miembro puede enviar este JSON a
-`POST /api/reservas/`, usando el ID de un espacio existente y un horario libre:
+`POST /cowork/reservas/`, usando el ID de un espacio existente y un horario libre:
 
 ```json
 {
@@ -436,7 +531,7 @@ Para validar las rutas de ambas APIs y los flujos de guardado con bases aisladas
 python manage.py test tests.test_viewsets tests.test_api_mysql --noinput
 ```
 
-Archivos principales: `cowork/views.py`, `cowork/serializers_gestion.py`,
+Archivos principales: `cowork/views.py`, `cowork/serializer.py`,
 `cowork/urls.py` y `drf/urls.py`.
 Referencia: [ViewSets de Django REST Framework](https://www.django-rest-framework.org/api-guide/viewsets/).
 
@@ -444,19 +539,21 @@ Referencia: [ViewSets de Django REST Framework](https://www.django-rest-framewor
 
 | URL | Vista | Plantilla | Resultado |
 | --- | --- | --- | --- |
-| `/` | `PaginaViewSet.bienvenida` | `cowork/bienvenida.html` | Página de bienvenida |
-| `/inicio/` | `PaginaViewSet.inicio` | `cowork/inicio.html` | Página principal |
+| `/` | `bienvenida` | `cowork/bienvenida.html` | Página de bienvenida |
+| `/inicio/` | `inicio` | `cowork/inicio.html` | Página principal |
+| `/admin/` | `admin.site.urls` | Django Admin | CRUD de los modelos con las mismas reglas y auditoría |
 | Cualquier URL inexistente | `Error404ViewSet.retrieve` | `cowork/404.html` | Error HTTP 404 personalizado |
 
 El botón **Entrar a la plataforma** utiliza el nombre de la ruta `inicio` para navegar desde la bienvenida hasta `/inicio/`.
 
-Todas las vistas HTTP propias de la aplicación están agrupadas en ViewSets
-dentro de `cowork/views.py`. `SedePantallaViewSet`, `TipoEspacioPantallaViewSet`,
+Las páginas `bienvenida` e `inicio` son funciones, como en la guía; el resto de
+las vistas HTTP propias de la aplicación están agrupadas en ViewSets dentro de
+`cowork/views.py`. `SedePantallaViewSet`, `TipoEspacioPantallaViewSet`,
 `UsuarioPantallaViewSet`, `EspacioPantallaViewSet`, `ReservaPantallaViewSet` y
 `ReportePantallaViewSet` reúnen los listados, formularios y acciones de las
 pantallas HTML.
 
-Las APIs JSON (`/api/` y `/api/mysql/`) usan `DefaultRouter`. Las pantallas HTML
+Las APIs JSON (`/cowork/` y `/api/mysql/`) usan `DefaultRouter`. Las pantallas HTML
 declaran sus rutas con `path()`, porque sus URLs (`nuevo/`, `editar/`, `desactivar/`)
 y sus nombres (`usuario_crear`, `espacio_editar`, etc.) son los que usan las
 plantillas y las redirecciones; un router genera otro formato de URLs pensado
@@ -506,6 +603,7 @@ El formulario de usuario crea también su cuenta de acceso. Las contraseñas se 
 | `/sedes/nueva/` | Crear sede | Administrador |
 | `/sedes/<id>/editar/` | Editar sede | Administrador |
 | `/sedes/<id>/desactivar/` | Confirmar la desactivación | Administrador |
+| `/sedes/<id>/eliminar/` | Eliminar una sede sin espacios | Administrador |
 | `/tipos-espacio/` | Listado de tipos de espacio | Administrador |
 | `/tipos-espacio/nuevo/` | Crear tipo | Administrador |
 | `/tipos-espacio/<id>/editar/` | Editar tipo | Administrador |
@@ -514,10 +612,13 @@ El formulario de usuario crea también su cuenta de acceso. Las contraseñas se 
 | `/usuarios/nuevo/` | Crear usuario y cuenta | Administrador |
 | `/usuarios/<id>/editar/` | Editar datos y rol | Administrador |
 | `/usuarios/<id>/desactivar/` | Confirmar la baja lógica | Administrador |
+| `/usuarios/<id>/activar/` | Confirmar la reactivación de un usuario inactivo | Administrador |
+| `/usuarios/<id>/eliminar/` | Eliminar un usuario sin actividad | Administrador |
 | `/espacios/` | Consultar espacios | Miembro o administrador |
 | `/espacios/nuevo/` | Crear espacio | Administrador |
 | `/espacios/<id>/editar/` | Editar espacio y estado | Administrador |
 | `/espacios/<id>/desactivar/` | Confirmar la inactivación | Administrador |
+| `/espacios/<id>/eliminar/` | Eliminar un espacio sin reservas | Administrador |
 | `/reservas/` | Listar reservas | Miembro: propias; administrador: todas |
 | `/reservas/nueva/` | Crear una reserva pendiente | Miembro o administrador |
 | `/reservas/<id>/` | Detalle e historial | Titular o administrador |
@@ -525,9 +626,10 @@ El formulario de usuario crea también su cuenta de acceso. Las contraseñas se 
 | `/reservas/<id>/cancelar/` | Cancelar indicando un motivo | Titular o administrador |
 | `/reservas/<id>/confirmar/` | Confirmar mediante POST | Administrador |
 | `/reservas/<id>/finalizar/` | Finalizar mediante POST | Administrador |
+| `/reservas/<id>/eliminar/` | Eliminar una reserva pendiente o cancelada | Titular o administrador |
 | `/reportes/` | Descargar reportes en PDF o Excel | Administrador |
 
-Las pantallas incluyen protección CSRF. Los formularios de baja muestran una confirmación; solo POST modifica datos. El miembro no puede cambiar el titular de su reserva ni acceder a reservas ajenas. Las observaciones privadas del espacio se muestran únicamente al administrador.
+Las pantallas incluyen protección CSRF. Los formularios de baja y de eliminación muestran una confirmación; solo POST modifica datos. El botón **Eliminar** aparece solo cuando el registro se puede eliminar; si otra acción lo impide entre tanto, la pantalla muestra el motivo. El miembro no puede cambiar el titular de su reserva ni acceder a reservas ajenas. Las observaciones privadas del espacio se muestran únicamente al administrador.
 
 ### Reglas del negocio
 
@@ -537,13 +639,14 @@ Las pantallas incluyen protección CSRF. Los formularios de baja muestran una co
 - El fin debe ser posterior al inicio. La cantidad de personas debe ser positiva y no superar la capacidad del espacio.
 - Las reservas pendientes y confirmadas bloquean su intervalo. Una reserva que termina exactamente cuando empieza otra no se solapa. Las reservas canceladas y finalizadas no bloquean disponibilidad.
 - Cada reserva creada por el CRUD incluye un estado inicial en el historial. Cada transición agrega el estado anterior, el nuevo, la fecha, el responsable y el motivo.
-- Las sedes se desactivan: sus espacios dejan de aceptar reservas nuevas y las existentes se conservan. Un tipo de espacio solo se elimina si no tiene espacios; la auditoría conserva sus valores.
-- Usuarios y espacios utilizan baja lógica. Las reservas se cancelan y sus registros se conservan. Desactivar un usuario también impide su acceso mediante la cuenta de Django; sus reservas existentes se conservan.
+- Desactivar una sede hace que sus espacios dejen de aceptar reservas nuevas; las existentes se conservan. Desactivar un usuario también impide su acceso mediante la cuenta de Django; sus reservas se conservan. Activarlo le devuelve el acceso con su misma contraseña.
+- La eliminación física está protegida (ver [Eliminación protegida](#eliminación-protegida)): sedes y tipos sin espacios, espacios sin reservas, usuarios sin actividad y reservas pendientes o canceladas. Para registros con historial se utiliza la baja lógica (desactivar o cancelar).
+- Elimina siempre con `eliminar(actor)`, que valida, aplica permisos y audita. Llamar directamente a `delete()` en sedes, espacios, usuarios o reservas lanza un error.
 - `guardar(actor)` en los modelos aplica validaciones, permisos y auditoría dentro de una transacción. Para cambiar el estado de una reserva, utiliza `confirmar`, `cancelar` o `finalizar`. No uses `save()` o `QuerySet.update()` para ejecutar operaciones de negocio: esas operaciones de Django no aplican el flujo completo.
 
 Antes de comprobar la disponibilidad, `guardar` bloquea la fila del espacio con `SELECT ... FOR UPDATE` en MySQL/MariaDB, de modo que dos reservas simultáneas del mismo espacio se validan una después de la otra. Los métodos vuelven a validar al guardar, aunque el formulario ya haya pasado su validación.
 
-En Django Admin todos los modelos, incluidos los catálogos Sede y TipoEspacio, se registran para consulta; sus cambios se realizan mediante el CRUD para aplicar las reglas, los permisos y la auditoría.
+En Django Admin todos los modelos están registrados. Sedes, tipos de espacio, espacios, usuarios y reservas se crean, editan y eliminan mediante `guardar(actor)` y `eliminar(actor)`, con las mismas reglas, permisos y auditoría que las pantallas. El historial, la auditoría y la lista de administradores (modelo proxy `Administrador`) son de solo consulta; un administrador se crea o cambia de rol desde Usuarios.
 
 ### Migraciones y datos existentes
 
@@ -564,7 +667,7 @@ Los métodos `calcularUsoEspacios`, `resumirActividad` y `analizarUsuarios` requ
 ### Descargar reportes en PDF o Excel
 
 Los administradores descargan reportes desde la pantalla `/reportes/` (enlace
-**Reportes** del menú) o desde la API `GET /api/reportes/`. Ambas validan los
+**Reportes** del menú) o desde la API `GET /cowork/reportes/`. Ambas validan los
 parámetros con `ReporteForm` y generan el archivo con `ServicioReportes.generarDocumento`.
 
 | Parámetro | Valores | Uso |
@@ -578,7 +681,7 @@ parámetros con `ReporteForm` y generan el archivo con `ServicioReportes.generar
 Por ejemplo, con la sesión iniciada como administrador:
 
 ```text
-/api/reportes/?tipo=diario&formato=xlsx&desde=2026-10-01&hasta=2026-10-31
+/cowork/reportes/?tipo=diario&formato=xlsx&desde=2026-10-01&hasta=2026-10-31
 ```
 
 La respuesta es el archivo adjunto (`reporte-diario.xlsx` o `reporte-reservas.pdf`).
@@ -598,7 +701,7 @@ python manage.py test
 ```
 
 Las pruebas se ejecutan sobre MySQL/MariaDB: Django crea la base temporal
-`test_<MYSQL_DATABASE>` y la elimina al terminar, sin tocar los datos de la base
+`test_<NAME>` y la elimina al terminar, sin tocar los datos de la base
 principal. El usuario de `.env` necesita permisos sobre esa base (el contenedor
 los concede solo; con un servidor instalado, ver el `GRANT` de la opción B).
 

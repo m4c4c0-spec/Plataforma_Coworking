@@ -1,0 +1,506 @@
+[
+    {
+        "model": "cowork.reserva",
+        "pk": 101,
+        "fields": {
+            "usuario": 102,
+            "espacio": 101,
+            "inicio": "2026-11-03T12:00:00Z",
+            "fin": "2026-11-03T14:00:00Z",
+            "cantidad_personas": 6,
+            "estado": "pendiente",
+            "fecha_creacion": "2026-10-10T13:00:00Z",
+            "observaciones": "Reunión de planificación.",
+            "motivo_cancelacion": "",
+            "updated_at": "2026-10-10T13:00:00Z"
+        }
+    },
+    {
+        "model": "cowork.reserva",
+        "pk": 102,
+        "fields": {
+            "usuario": 103,
+            "espacio": 101,
+            "inicio": "2026-11-03T14:00:00Z",
+            "fin": "2026-11-03T15:00:00Z",
+            "cantidad_personas": 4,
+            "estado": "confirmada",
+            "fecha_creacion": "2026-10-10T14:00:00Z",
+            "observaciones": "",
+            "motivo_cancelacion": "",
+            "updated_at": "2026-10-10T14:00:00Z"
+        }
+    },
+    {
+        "model": "cowork.reserva",
+        "pk": 103,
+        "fields": {
+            "usuario": 104,
+            "espacio": 103,
+            "inicio": "2026-11-05T13:00:00Z",
+            "fin": "2026-11-05T20:00:00Z",
+            "cantidad_personas": 3,
+            "estado": "confirmada",
+            "fecha_creacion": "2026-10-09T18:00:00Z",
+            "observaciones": "Jornada de trabajo del equipo.",
+            "motivo_cancelacion": "",
+            "updated_at": "2026-10-09T18:00:00Z"
+        }
+    },
+    {
+        "model": "cowork.reserva",
+        "pk": 104,
+        "fields": {
+            "usuario": 102,
+            "espacio": 105,
+            "inicio": "2026-11-04T18:00:00Z",
+            "fin": "2026-11-04T18:30:00Z",
+            "cantidad_personas": 1,
+            "estado": "cancelada",
+            "fecha_creacion": "2026-10-08T15:00:00Z",
+            "observaciones": "",
+            "motivo_cancelacion": "La llamada se reprogramó.",
+            "updated_at": "2026-10-08T15:00:00Z"
+        }
+    },
+    {
+        "model": "cowork.reserva",
+        "pk": 105,
+        "fields": {
+            "usuario": 103,
+            "espacio": 106,
+            "inicio": "2026-11-20T21:00:00Z",
+            "fin": "2026-11-21T00:00:00Z",
+            "cantidad_personas": 30,
+            "estado": "pendiente",
+            "fecha_creacion": "2026-10-12T19:00:00Z",
+            "observaciones": "Taller de emprendimiento.",
+            "motivo_cancelacion": "",
+            "updated_at": "2026-10-12T19:00:00Z"
+        }
+    },
+    {
+        "model": "cowork.reserva",
+        "pk": 106,
+        "fields": {
+            "usuario": 104,
+            "espacio": 102,
+            "inicio": "2026-11-10T12:00:00Z",
+            "fin": "2026-11-10T13:00:00Z",
+            "cantidad_personas": 2,
+            "estado": "pendiente",
+            "fecha_creacion": "2026-10-12T20:00:00Z",
+            "observaciones": "",
+            "motivo_cancelacion": "",
+            "updated_at": "2026-10-12T20:00:00Z"
+        }
+    },
+    {
+        "model": "cowork.reserva",
+        "pk": 107,
+        "fields": {
+            "usuario": 102,
+            "espacio": 104,
+            "inicio": "2026-10-15T12:00:00Z",
+            "fin": "2026-10-15T16:00:00Z",
+            "cantidad_personas": 1,
+            "estado": "confirmada",
+            "fecha_creacion": "2026-10-11T13:00:00Z",
+            "observaciones": "",
+            "motivo_cancelacion": "",
+            "updated_at": "2026-10-11T13:00:00Z"
+        }
+    },
+    {
+        "model": "cowork.reserva",
+        "pk": 108,
+        "fields": {
+            "usuario": 102,
+            "espacio": 101,
+            "inicio": "2026-10-01T12:00:00Z",
+            "fin": "2026-10-01T15:00:00Z",
+            "cantidad_personas": 5,
+            "estado": "finalizada",
+            "fecha_creacion": "2026-09-25T13:00:00Z",
+            "observaciones": "Presentación a clientes.",
+            "motivo_cancelacion": "",
+            "updated_at": "2026-09-25T13:00:00Z"
+        }
+    },
+    {
+        "model": "cowork.reserva",
+        "pk": 109,
+        "fields": {
+            "usuario": 103,
+            "espacio": 104,
+            "inicio": "2026-10-05T11:00:00Z",
+            "fin": "2026-10-05T21:00:00Z",
+            "cantidad_personas": 1,
+            "estado": "finalizada",
+            "fecha_creacion": "2026-09-30T12:00:00Z",
+            "observaciones": "",
+            "motivo_cancelacion": "",
+            "updated_at": "2026-09-30T12:00:00Z"
+        }
+    },
+    {
+        "model": "cowork.reserva",
+        "pk": 110,
+        "fields": {
+            "usuario": 104,
+            "espacio": 103,
+            "inicio": "2026-10-07T17:00:00Z",
+            "fin": "2026-10-07T19:00:00Z",
+            "cantidad_personas": 2,
+            "estado": "cancelada",
+            "fecha_creacion": "2026-10-01T13:00:00Z",
+            "observaciones": "",
+            "motivo_cancelacion": "Corte de energía programado en la sede.",
+            "updated_at": "2026-10-01T13:00:00Z"
+        }
+    },
+    {
+        "model": "cowork.reserva",
+        "pk": 111,
+        "fields": {
+            "usuario": 105,
+            "espacio": 102,
+            "inicio": "2026-09-15T13:00:00Z",
+            "fin": "2026-09-15T14:00:00Z",
+            "cantidad_personas": 2,
+            "estado": "finalizada",
+            "fecha_creacion": "2026-09-10T13:00:00Z",
+            "observaciones": "",
+            "motivo_cancelacion": "",
+            "updated_at": "2026-09-10T13:00:00Z"
+        }
+    },
+    {
+        "model": "cowork.reserva",
+        "pk": 112,
+        "fields": {
+            "usuario": 103,
+            "espacio": 103,
+            "inicio": "2026-10-08T12:00:00Z",
+            "fin": "2026-10-08T16:00:00Z",
+            "cantidad_personas": 4,
+            "estado": "finalizada",
+            "fecha_creacion": "2026-10-02T18:00:00Z",
+            "observaciones": "",
+            "motivo_cancelacion": "",
+            "updated_at": "2026-10-02T18:00:00Z"
+        }
+    },
+    {
+        "model": "cowork.historialestadoreserva",
+        "pk": 101,
+        "fields": {
+            "reserva": 101,
+            "responsable": 102,
+            "estado_anterior": "",
+            "estado_nuevo": "pendiente",
+            "fecha_cambio": "2026-10-10T13:00:00Z",
+            "motivo": "Creación de la reserva"
+        }
+    },
+    {
+        "model": "cowork.historialestadoreserva",
+        "pk": 102,
+        "fields": {
+            "reserva": 102,
+            "responsable": 103,
+            "estado_anterior": "",
+            "estado_nuevo": "pendiente",
+            "fecha_cambio": "2026-10-10T14:00:00Z",
+            "motivo": "Creación de la reserva"
+        }
+    },
+    {
+        "model": "cowork.historialestadoreserva",
+        "pk": 103,
+        "fields": {
+            "reserva": 102,
+            "responsable": 101,
+            "estado_anterior": "pendiente",
+            "estado_nuevo": "confirmada",
+            "fecha_cambio": "2026-10-11T12:00:00Z",
+            "motivo": ""
+        }
+    },
+    {
+        "model": "cowork.historialestadoreserva",
+        "pk": 104,
+        "fields": {
+            "reserva": 103,
+            "responsable": 104,
+            "estado_anterior": "",
+            "estado_nuevo": "pendiente",
+            "fecha_cambio": "2026-10-09T18:00:00Z",
+            "motivo": "Creación de la reserva"
+        }
+    },
+    {
+        "model": "cowork.historialestadoreserva",
+        "pk": 105,
+        "fields": {
+            "reserva": 103,
+            "responsable": 101,
+            "estado_anterior": "pendiente",
+            "estado_nuevo": "confirmada",
+            "fecha_cambio": "2026-10-10T12:30:00Z",
+            "motivo": ""
+        }
+    },
+    {
+        "model": "cowork.historialestadoreserva",
+        "pk": 106,
+        "fields": {
+            "reserva": 104,
+            "responsable": 102,
+            "estado_anterior": "",
+            "estado_nuevo": "pendiente",
+            "fecha_cambio": "2026-10-08T15:00:00Z",
+            "motivo": "Creación de la reserva"
+        }
+    },
+    {
+        "model": "cowork.historialestadoreserva",
+        "pk": 107,
+        "fields": {
+            "reserva": 104,
+            "responsable": 102,
+            "estado_anterior": "pendiente",
+            "estado_nuevo": "cancelada",
+            "fecha_cambio": "2026-10-09T11:00:00Z",
+            "motivo": "La llamada se reprogramó."
+        }
+    },
+    {
+        "model": "cowork.historialestadoreserva",
+        "pk": 108,
+        "fields": {
+            "reserva": 105,
+            "responsable": 103,
+            "estado_anterior": "",
+            "estado_nuevo": "pendiente",
+            "fecha_cambio": "2026-10-12T19:00:00Z",
+            "motivo": "Creación de la reserva"
+        }
+    },
+    {
+        "model": "cowork.historialestadoreserva",
+        "pk": 109,
+        "fields": {
+            "reserva": 106,
+            "responsable": 104,
+            "estado_anterior": "",
+            "estado_nuevo": "pendiente",
+            "fecha_cambio": "2026-10-12T20:00:00Z",
+            "motivo": "Creación de la reserva"
+        }
+    },
+    {
+        "model": "cowork.historialestadoreserva",
+        "pk": 110,
+        "fields": {
+            "reserva": 107,
+            "responsable": 102,
+            "estado_anterior": "",
+            "estado_nuevo": "pendiente",
+            "fecha_cambio": "2026-10-11T13:00:00Z",
+            "motivo": "Creación de la reserva"
+        }
+    },
+    {
+        "model": "cowork.historialestadoreserva",
+        "pk": 111,
+        "fields": {
+            "reserva": 107,
+            "responsable": 101,
+            "estado_anterior": "pendiente",
+            "estado_nuevo": "confirmada",
+            "fecha_cambio": "2026-10-11T15:00:00Z",
+            "motivo": ""
+        }
+    },
+    {
+        "model": "cowork.historialestadoreserva",
+        "pk": 112,
+        "fields": {
+            "reserva": 108,
+            "responsable": 102,
+            "estado_anterior": "",
+            "estado_nuevo": "pendiente",
+            "fecha_cambio": "2026-09-25T13:00:00Z",
+            "motivo": "Creación de la reserva"
+        }
+    },
+    {
+        "model": "cowork.historialestadoreserva",
+        "pk": 113,
+        "fields": {
+            "reserva": 108,
+            "responsable": 101,
+            "estado_anterior": "pendiente",
+            "estado_nuevo": "confirmada",
+            "fecha_cambio": "2026-09-26T12:00:00Z",
+            "motivo": ""
+        }
+    },
+    {
+        "model": "cowork.historialestadoreserva",
+        "pk": 114,
+        "fields": {
+            "reserva": 108,
+            "responsable": 101,
+            "estado_anterior": "confirmada",
+            "estado_nuevo": "finalizada",
+            "fecha_cambio": "2026-10-01T15:30:00Z",
+            "motivo": ""
+        }
+    },
+    {
+        "model": "cowork.historialestadoreserva",
+        "pk": 115,
+        "fields": {
+            "reserva": 109,
+            "responsable": 103,
+            "estado_anterior": "",
+            "estado_nuevo": "pendiente",
+            "fecha_cambio": "2026-09-30T12:00:00Z",
+            "motivo": "Creación de la reserva"
+        }
+    },
+    {
+        "model": "cowork.historialestadoreserva",
+        "pk": 116,
+        "fields": {
+            "reserva": 109,
+            "responsable": 101,
+            "estado_anterior": "pendiente",
+            "estado_nuevo": "confirmada",
+            "fecha_cambio": "2026-09-30T14:00:00Z",
+            "motivo": ""
+        }
+    },
+    {
+        "model": "cowork.historialestadoreserva",
+        "pk": 117,
+        "fields": {
+            "reserva": 109,
+            "responsable": 101,
+            "estado_anterior": "confirmada",
+            "estado_nuevo": "finalizada",
+            "fecha_cambio": "2026-10-05T21:30:00Z",
+            "motivo": ""
+        }
+    },
+    {
+        "model": "cowork.historialestadoreserva",
+        "pk": 118,
+        "fields": {
+            "reserva": 110,
+            "responsable": 104,
+            "estado_anterior": "",
+            "estado_nuevo": "pendiente",
+            "fecha_cambio": "2026-10-01T13:00:00Z",
+            "motivo": "Creación de la reserva"
+        }
+    },
+    {
+        "model": "cowork.historialestadoreserva",
+        "pk": 119,
+        "fields": {
+            "reserva": 110,
+            "responsable": 101,
+            "estado_anterior": "pendiente",
+            "estado_nuevo": "confirmada",
+            "fecha_cambio": "2026-10-02T12:00:00Z",
+            "motivo": ""
+        }
+    },
+    {
+        "model": "cowork.historialestadoreserva",
+        "pk": 120,
+        "fields": {
+            "reserva": 110,
+            "responsable": 101,
+            "estado_anterior": "confirmada",
+            "estado_nuevo": "cancelada",
+            "fecha_cambio": "2026-10-06T21:00:00Z",
+            "motivo": "Corte de energía programado en la sede."
+        }
+    },
+    {
+        "model": "cowork.historialestadoreserva",
+        "pk": 121,
+        "fields": {
+            "reserva": 111,
+            "responsable": 105,
+            "estado_anterior": "",
+            "estado_nuevo": "pendiente",
+            "fecha_cambio": "2026-09-10T13:00:00Z",
+            "motivo": "Creación de la reserva"
+        }
+    },
+    {
+        "model": "cowork.historialestadoreserva",
+        "pk": 122,
+        "fields": {
+            "reserva": 111,
+            "responsable": 101,
+            "estado_anterior": "pendiente",
+            "estado_nuevo": "confirmada",
+            "fecha_cambio": "2026-09-10T15:00:00Z",
+            "motivo": ""
+        }
+    },
+    {
+        "model": "cowork.historialestadoreserva",
+        "pk": 123,
+        "fields": {
+            "reserva": 111,
+            "responsable": 101,
+            "estado_anterior": "confirmada",
+            "estado_nuevo": "finalizada",
+            "fecha_cambio": "2026-09-15T14:30:00Z",
+            "motivo": ""
+        }
+    },
+    {
+        "model": "cowork.historialestadoreserva",
+        "pk": 124,
+        "fields": {
+            "reserva": 112,
+            "responsable": 103,
+            "estado_anterior": "",
+            "estado_nuevo": "pendiente",
+            "fecha_cambio": "2026-10-02T18:00:00Z",
+            "motivo": "Creación de la reserva"
+        }
+    },
+    {
+        "model": "cowork.historialestadoreserva",
+        "pk": 125,
+        "fields": {
+            "reserva": 112,
+            "responsable": 101,
+            "estado_anterior": "pendiente",
+            "estado_nuevo": "confirmada",
+            "fecha_cambio": "2026-10-03T12:00:00Z",
+            "motivo": ""
+        }
+    },
+    {
+        "model": "cowork.historialestadoreserva",
+        "pk": 126,
+        "fields": {
+            "reserva": 112,
+            "responsable": 101,
+            "estado_anterior": "confirmada",
+            "estado_nuevo": "finalizada",
+            "fecha_cambio": "2026-10-08T16:15:00Z",
+            "motivo": ""
+        }
+    }
+]

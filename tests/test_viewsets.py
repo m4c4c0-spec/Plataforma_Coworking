@@ -216,6 +216,66 @@ class GestionViewSetTests(DatosCoworkTests):
         self.assertFalse(self.miembro.cuenta.is_active)
         self.assertEqual(Reserva.objects.count(), 1)
 
+    def test_administrador_no_puede_desactivarse_ni_quitarse_el_rol(self):
+        self.client.force_login(self.admin.cuenta)
+        respuesta = self.client.post(reverse('api:usuario-desactivar', args=[self.admin.pk]), format='json')
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertIn('propia cuenta', str(respuesta.data))
+        respuesta = self.client.patch(
+            reverse('api:usuario-detail', args=[self.admin.pk]), {'rol': Usuario.Rol.MIEMBRO}, format='json',
+        )
+        self.assertEqual(respuesta.status_code, 400)
+        self.admin.refresh_from_db()
+        self.assertTrue(self.admin.activo)
+        self.assertEqual(self.admin.rol, Usuario.Rol.ADMINISTRADOR)
+
+    def test_activar_usuario_sincroniza_la_cuenta(self):
+        self.miembro.desactivar(self.admin)
+        url = reverse('api:usuario-activar', args=[self.miembro.pk])
+        self.client.force_login(self.otro.cuenta)
+        self.assertEqual(self.client.post(url, format='json').status_code, 403)
+        self.client.force_login(self.admin.cuenta)
+        respuesta = self.client.post(url, format='json')
+        self.assertEqual(respuesta.status_code, 200, respuesta.data)
+        self.assertTrue(respuesta.data['activo'])
+        self.miembro.cuenta.refresh_from_db()
+        self.assertTrue(self.miembro.cuenta.is_active)
+
+    def test_historial_es_de_solo_lectura_y_el_miembro_ve_solo_el_suyo(self):
+        propia = self.nueva_reserva()
+        ajena = self.nueva_reserva(usuario=self.otro, inicio=self.fin, fin=self.fin + timedelta(hours=1))
+        propia.confirmar(self.admin)
+        url = reverse('api:historial-reserva-list')
+        respuesta = self.client.get(url)
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual([cambio['reserva'] for cambio in respuesta.data], [propia.pk, propia.pk])
+        self.assertEqual([cambio['estado_nuevo'] for cambio in respuesta.data], ['pendiente', 'confirmada'])
+        detalle_ajeno = reverse('api:historial-reserva-detail', args=[ajena.historial.get().pk])
+        self.assertEqual(self.client.get(detalle_ajeno).status_code, 404)
+        self.assertEqual(self.client.post(url, {}, format='json').status_code, 405)
+        self.client.force_login(self.admin.cuenta)
+        self.assertEqual(len(self.client.get(url).data), 3)
+        self.assertEqual(self.client.delete(detalle_ajeno).status_code, 405)
+        self.assertEqual(ajena.historial.count(), 1)
+
+    def test_auditoria_es_de_solo_lectura_y_solo_para_administradores(self):
+        self.nueva_reserva()
+        self.otro.desactivar(self.admin)
+        url = reverse('api:evento-auditoria-list')
+        self.assertEqual(self.client.get(url).status_code, 403)
+        self.client.force_login(self.admin.cuenta)
+        respuesta = self.client.get(url)
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(
+            [(evento['accion'], evento['tipo_entidad']) for evento in respuesta.data],
+            [('actualizar', 'usuario'), ('crear', 'reserva')],
+        )
+        self.assertNotIn('password', str(respuesta.data))
+        self.assertEqual(self.client.post(url, {}, format='json').status_code, 405)
+        detalle = reverse('api:evento-auditoria-detail', args=[respuesta.data[0]['id']])
+        self.assertEqual(self.client.delete(detalle).status_code, 405)
+        self.assertEqual(EventoAuditoria.objects.count(), 2)
+
     def test_crear_editar_y_desactivar_espacio_aplica_las_reglas(self):
         self.client.force_login(self.admin.cuenta)
         respuesta = self.client.post(reverse('api:espacio-list'), {
@@ -250,15 +310,23 @@ class GestionViewSetTests(DatosCoworkTests):
                 self.assertEqual(respuesta.status_code, 200)
                 self.assertEqual(len(respuesta.data), 1)
 
-    def test_delete_no_elimina_datos_de_negocio(self):
+    def test_delete_protege_datos_relacionados(self):
         reserva = self.nueva_reserva()
         self.client.force_login(self.admin.cuenta)
-        for recurso, pk in (('usuario', self.miembro.pk), ('espacio', self.espacio.pk), ('reserva', reserva.pk)):
-            with self.subTest(recurso=recurso):
-                self.assertEqual(self.client.delete(reverse(f'api:{recurso}-detail', args=[pk])).status_code, 405)
+        usuario = reverse('api:usuario-detail', args=[self.miembro.pk])
+        espacio = reverse('api:espacio-detail', args=[self.espacio.pk])
+        for url in (usuario, espacio):
+            with self.subTest(url=url):
+                respuesta = self.client.delete(url)
+                self.assertEqual(respuesta.status_code, 400)
+                self.assertIn('non_field_errors', respuesta.data)
+        self.assertEqual(self.client.delete(reverse('api:reserva-detail', args=[reserva.pk])).status_code, 204)
+        self.assertEqual(self.client.delete(espacio).status_code, 204)
+        # El miembro creó la reserva: la auditoría conserva su acción y su perfil.
+        self.assertEqual(self.client.delete(usuario).status_code, 400)
         self.assertTrue(Usuario.objects.filter(pk=self.miembro.pk).exists())
-        self.assertTrue(Espacio.objects.filter(pk=self.espacio.pk).exists())
-        self.assertTrue(Reserva.objects.filter(pk=reserva.pk).exists())
+        self.assertFalse(Espacio.objects.filter(pk=self.espacio.pk).exists())
+        self.assertFalse(Reserva.objects.filter(pk=reserva.pk).exists())
 
     def test_autenticacion_de_sesion_exige_csrf_al_guardar(self):
         cliente = APIClient(enforce_csrf_checks=True, HTTP_HOST='localhost')

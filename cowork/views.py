@@ -8,9 +8,10 @@ from django.db import IntegrityError
 from django.db.models import Count
 from django.http import Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils.decorators import method_decorator
 from django.utils.http import content_disposition_header
-from rest_framework import mixins, serializers, viewsets
+from rest_framework import serializers, viewsets
 from rest_framework.decorators import action
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.exceptions import APIException, NotFound
@@ -25,15 +26,16 @@ from .database import sesion_mysql
 from .forms import (
     CancelacionForm, EspacioForm, ReporteForm, ReservaForm, SedeForm, TipoEspacioForm, UsuarioForm,
 )
-from .models import Espacio, Sede, TipoEspacio, Usuario, exigir_permiso
+from .models import Espacio, EventoAuditoria, HistorialEstadoReserva, Sede, TipoEspacio, Usuario, exigir_permiso
 from .models_sqlalchemy import EspacioSQL, ReservaSQL, SedeSQL, TipoEspacioSQL, UsuarioSQL
-from .serializers import (
+from .serializers_mysql import (
     EspacioSerializer, PaginacionSerializer, ReservaSerializer,
     SedeSerializer, TipoEspacioSerializer, UsuarioSerializer,
 )
-from .serializers_gestion import (
-    CancelacionSerializer, EspacioGestionSerializer, ReservaGestionSerializer,
-    SedeGestionSerializer, TipoEspacioGestionSerializer, UsuarioGestionSerializer,
+from .serializer import (
+    CancelacionSerializer, EspacioGestionSerializer, EventoAuditoriaSerializer,
+    HistorialEstadoReservaSerializer, ReservaGestionSerializer, SedeGestionSerializer,
+    TipoEspacioGestionSerializer, UsuarioGestionSerializer,
 )
 from .services import ServicioReportes
 
@@ -76,14 +78,14 @@ class HTMLViewSet(viewsets.ViewSet):
         return super().handle_exception(exc)
 
 
-class PaginaViewSet(HTMLViewSet):
-    def bienvenida(self, request):
-        """Renderiza la página pública de bienvenida."""
-        return render(request, 'cowork/bienvenida.html')
+def bienvenida(request):
+    """Renderiza la página pública de bienvenida."""
+    return render(request, 'cowork/bienvenida.html')
 
-    def inicio(self, request):
-        """Renderiza la página que presenta las características de la aplicación."""
-        return render(request, 'cowork/inicio.html')
+
+def inicio(request):
+    """Renderiza la página que presenta las características de la aplicación."""
+    return render(request, 'cowork/inicio.html')
 
 
 class Error404ViewSet(HTMLViewSet):
@@ -121,13 +123,30 @@ class PantallaGestionViewSet(HTMLViewSet):
     def contexto_gestion(self, request, **extra):
         return {'actor': request.actor, 'es_admin': request.actor.rol == Usuario.Rol.ADMINISTRADOR, **extra}
 
+    def confirmar_eliminacion(self, request, objeto, *, titulo, descripcion, volver, mensaje, volver_error=None):
+        """GET muestra la confirmación; POST borra mediante eliminar(actor)."""
+        if request.method != 'POST':
+            return render(request, 'cowork/confirmar_accion.html', self.contexto_gestion(
+                request, titulo=titulo, objeto=objeto, volver=volver, descripcion=descripcion,
+            ))
+        try:
+            objeto.eliminar(request.actor)
+        except ValidationError as error:
+            messages.error(request, ' '.join(error.messages))
+        except IntegrityError:
+            messages.error(request, 'No se pudo eliminar: el registro tiene datos relacionados.')
+        else:
+            messages.success(request, mensaje)
+            return redirect(volver)
+        return redirect(volver_error or volver)
+
 
 class UsuarioPantallaViewSet(PantallaGestionViewSet):
     permiso_lectura = 'gestionar_usuarios'
 
     def list(self, request):
         return render(request, 'cowork/usuarios.html', self.contexto_gestion(
-            request, usuarios=Usuario.objects.select_related('cuenta'),
+            request, usuarios=Usuario.objects.select_related('cuenta').annotate(total_reservas=Count('reservas')),
         ))
 
     def crear(self, request):
@@ -152,25 +171,52 @@ class UsuarioPantallaViewSet(PantallaGestionViewSet):
         ))
 
     def desactivar(self, request, pk=None):
+        return self._cambiar_activo(
+            request, pk, activo=False, titulo='Desactivar usuario',
+            descripcion='El usuario pierde acceso. Sus reservas e historial se conservan.',
+            mensaje='Usuario desactivado. Sus reservas y registros se conservan.',
+        )
+
+    def activar(self, request, pk=None):
+        return self._cambiar_activo(
+            request, pk, activo=True, titulo='Activar usuario', boton='btn-success',
+            descripcion='El usuario recupera el acceso con su misma contraseña.',
+            mensaje='Usuario activado. Puede volver a ingresar.',
+        )
+
+    def _cambiar_activo(self, request, pk, *, activo, titulo, descripcion, mensaje, boton='btn-danger'):
+        """GET muestra la confirmación; POST activa o desactiva mediante guardar(actor)."""
         usuario = get_object_or_404(Usuario, pk=pk)
         if request.method == 'POST':
-            usuario.desactivar(request.actor)
-            messages.success(request, 'Usuario desactivado. Sus reservas y registros se conservan.')
+            cambiar = usuario.activar if activo else usuario.desactivar
+            try:
+                cambiar(request.actor)
+            except ValidationError as error:
+                messages.error(request, ' '.join(error.messages))
+            else:
+                messages.success(request, mensaje)
             return redirect('usuarios')
         return render(request, 'cowork/confirmar_accion.html', self.contexto_gestion(
-            request, titulo='Desactivar usuario', objeto=usuario, volver='usuarios',
-            descripcion='El usuario pierde acceso. Sus reservas e historial se conservan.',
+            request, titulo=titulo, objeto=usuario, volver='usuarios', descripcion=descripcion, boton=boton,
         ))
+
+    def eliminar(self, request, pk=None):
+        return self.confirmar_eliminacion(
+            request, get_object_or_404(Usuario, pk=pk), titulo='Eliminar usuario', volver='usuarios',
+            descripcion='Se borran el perfil y su cuenta de acceso. Solo se pueden eliminar usuarios '
+                        'sin reservas ni acciones registradas; en otro caso, desactívalo.',
+            mensaje='Usuario eliminado.',
+        )
 
 
 class EspacioPantallaViewSet(PantallaGestionViewSet):
     permisos_acciones = {
         'crear': 'gestionar_espacios', 'editar': 'gestionar_espacios',
-        'desactivar': 'gestionar_espacios',
+        'desactivar': 'gestionar_espacios', 'eliminar': 'gestionar_espacios',
     }
 
     def list(self, request):
-        registros = Espacio.objects.select_related('sede', 'tipo')
+        registros = Espacio.objects.select_related('sede', 'tipo').annotate(total_reservas=Count('reservas'))
         if request.actor.rol != Usuario.Rol.ADMINISTRADOR:
             registros = registros.filter(estado=Espacio.Estado.DISPONIBLE, sede__activa=True)
         return render(request, 'cowork/espacios.html', self.contexto_gestion(request, espacios=registros))
@@ -208,12 +254,22 @@ class EspacioPantallaViewSet(PantallaGestionViewSet):
             descripcion='El espacio deja de aceptar reservas. Las reservas existentes se conservan.',
         ))
 
+    def eliminar(self, request, pk=None):
+        return self.confirmar_eliminacion(
+            request, get_object_or_404(Espacio, pk=pk), titulo='Eliminar espacio', volver='espacios',
+            descripcion='Solo se pueden eliminar espacios sin reservas; en otro caso, inactívalo. '
+                        'La auditoría conserva sus datos.',
+            mensaje='Espacio eliminado.',
+        )
+
 
 class SedePantallaViewSet(PantallaGestionViewSet):
     permiso_lectura = 'gestionar_espacios'
 
     def list(self, request):
-        return render(request, 'cowork/sedes.html', self.contexto_gestion(request, sedes=Sede.objects.all()))
+        return render(request, 'cowork/sedes.html', self.contexto_gestion(
+            request, sedes=Sede.objects.annotate(total_espacios=Count('espacios')),
+        ))
 
     def crear(self, request):
         return self._formulario(request)
@@ -247,6 +303,14 @@ class SedePantallaViewSet(PantallaGestionViewSet):
             descripcion='Sus espacios dejan de aceptar reservas nuevas. Las reservas existentes se conservan.',
         ))
 
+    def eliminar(self, request, pk=None):
+        return self.confirmar_eliminacion(
+            request, get_object_or_404(Sede, pk=pk), titulo='Eliminar sede', volver='sedes',
+            descripcion='Solo se pueden eliminar sedes sin espacios; en otro caso, desactívala. '
+                        'La auditoría conserva sus datos.',
+            mensaje='Sede eliminada.',
+        )
+
 
 class TipoEspacioPantallaViewSet(PantallaGestionViewSet):
     permiso_lectura = 'gestionar_espacios'
@@ -279,19 +343,11 @@ class TipoEspacioPantallaViewSet(PantallaGestionViewSet):
         ))
 
     def eliminar(self, request, pk=None):
-        tipo = get_object_or_404(TipoEspacio, pk=pk)
-        if request.method == 'POST':
-            try:
-                tipo.eliminar(request.actor)
-            except ValidationError as error:
-                messages.error(request, ' '.join(error.messages))
-            else:
-                messages.success(request, 'Tipo de espacio eliminado.')
-            return redirect('tipos_espacio')
-        return render(request, 'cowork/confirmar_accion.html', self.contexto_gestion(
-            request, titulo='Eliminar tipo de espacio', objeto=tipo, volver='tipos_espacio',
+        return self.confirmar_eliminacion(
+            request, get_object_or_404(TipoEspacio, pk=pk), titulo='Eliminar tipo de espacio',
+            volver='tipos_espacio', mensaje='Tipo de espacio eliminado.',
             descripcion='Solo se pueden eliminar tipos sin espacios asociados. La auditoría conserva sus datos.',
-        ))
+        )
 
 
 class ReservaPantallaViewSet(PantallaGestionViewSet):
@@ -299,7 +355,7 @@ class ReservaPantallaViewSet(PantallaGestionViewSet):
     permisos_acciones = {
         'crear': 'crear_reserva', 'editar': 'editar_reserva',
         'cancelar': 'cancelar_reserva', 'confirmar': 'confirmar_reserva',
-        'finalizar': 'finalizar_reserva',
+        'finalizar': 'finalizar_reserva', 'eliminar': 'eliminar_reserva',
     }
 
     def list(self, request):
@@ -372,6 +428,16 @@ class ReservaPantallaViewSet(PantallaGestionViewSet):
             messages.success(request, 'Reserva finalizada.')
         return redirect('reserva_detalle', pk=pk)
 
+    def eliminar(self, request, pk=None):
+        reserva = get_object_or_404(ServicioReportes.buscarReservas({}, request.actor), pk=pk)
+        return self.confirmar_eliminacion(
+            request, reserva, titulo='Eliminar reserva', volver='reservas',
+            volver_error=reverse('reserva_detalle', args=[pk]),
+            descripcion='Se borran la reserva y su historial de estados; la auditoría conserva sus datos. '
+                        'Solo se pueden eliminar reservas pendientes o canceladas.',
+            mensaje='Reserva eliminada.',
+        )
+
 
 class ReportePantallaViewSet(PantallaGestionViewSet):
     permiso_lectura = 'ver_reportes'
@@ -399,7 +465,9 @@ class PermisoGestion(BasePermission):
         return request.actor.puedeRealizar(permiso)
 
 
-class GestionViewSet(viewsets.GenericViewSet):
+class ReglasGestion:
+    """Autenticación, permisos por acción y errores del dominio, comunes a los ViewSets de la API."""
+
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated, PermisoGestion]
     renderer_classes = [JSONRenderer]
@@ -414,18 +482,16 @@ class GestionViewSet(viewsets.GenericViewSet):
             errores = {'non_field_errors' if campo == '__all__' else campo: valor for campo, valor in errores.items()}
             exc = serializers.ValidationError(errores)
         elif isinstance(exc, IntegrityError):
-            exc = serializers.ValidationError({
-                'non_field_errors': ['No se pudo guardar: existe un registro con esos datos.'],
-            })
+            mensaje = (
+                'No se pudo eliminar: el registro tiene datos relacionados.' if self.action == 'destroy'
+                else 'No se pudo guardar: existe un registro con esos datos.'
+            )
+            exc = serializers.ValidationError({'non_field_errors': [mensaje]})
         return super().handle_exception(exc)
 
-
-class LecturaViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, GestionViewSet):
-    pass
-
-
-class GuardadoViewSet(mixins.CreateModelMixin, mixins.UpdateModelMixin, LecturaViewSet):
-    """Crear y editar; las bajas se realizan mediante acciones del dominio."""
+    def perform_destroy(self, instance):
+        # DELETE borra mediante eliminar(actor), que valida y audita.
+        instance.eliminar(self.request.actor)
 
 
 CATALOGO_ACCIONES = {
@@ -434,7 +500,7 @@ CATALOGO_ACCIONES = {
 }
 
 
-class SedeViewSet(GuardadoViewSet):
+class SedeViewSet(ReglasGestion, viewsets.ModelViewSet):
     queryset = Sede.objects.all()
     serializer_class = SedeGestionSerializer
     permisos_acciones = CATALOGO_ACCIONES
@@ -452,16 +518,13 @@ class SedeViewSet(GuardadoViewSet):
         return Response(self.get_serializer(sede).data)
 
 
-class TipoEspacioViewSet(mixins.DestroyModelMixin, GuardadoViewSet):
+class TipoEspacioViewSet(ReglasGestion, viewsets.ModelViewSet):
     queryset = TipoEspacio.objects.all()
     serializer_class = TipoEspacioGestionSerializer
     permisos_acciones = CATALOGO_ACCIONES
 
-    def perform_destroy(self, instance):
-        instance.eliminar(self.request.actor)
 
-
-class UsuarioViewSet(GuardadoViewSet):
+class UsuarioViewSet(ReglasGestion, viewsets.ModelViewSet):
     queryset = Usuario.objects.select_related('cuenta')
     serializer_class = UsuarioGestionSerializer
     permiso_lectura = 'gestionar_usuarios'
@@ -472,13 +535,20 @@ class UsuarioViewSet(GuardadoViewSet):
         usuario.desactivar(request.actor)
         return Response(self.get_serializer(usuario).data)
 
+    @action(detail=True, methods=['post'])
+    def activar(self, request, pk=None):
+        usuario = self.get_object()
+        usuario.activar(request.actor)
+        return Response(self.get_serializer(usuario).data)
 
-class EspacioViewSet(GuardadoViewSet):
+
+class EspacioViewSet(ReglasGestion, viewsets.ModelViewSet):
     queryset = Espacio.objects.select_related('sede', 'tipo')
     serializer_class = EspacioGestionSerializer
     permisos_acciones = {
         'create': 'gestionar_espacios', 'update': 'gestionar_espacios',
         'partial_update': 'gestionar_espacios', 'desactivar': 'gestionar_espacios',
+        'destroy': 'gestionar_espacios',
     }
 
     def get_queryset(self):
@@ -494,13 +564,14 @@ class EspacioViewSet(GuardadoViewSet):
         return Response(self.get_serializer(espacio).data)
 
 
-class ReservaViewSet(GuardadoViewSet):
+class ReservaViewSet(ReglasGestion, viewsets.ModelViewSet):
     serializer_class = ReservaGestionSerializer
     permiso_lectura = 'ver_reservas'
     permisos_acciones = {
         'create': 'crear_reserva', 'update': 'editar_reserva',
         'partial_update': 'editar_reserva', 'cancelar': 'cancelar_reserva',
         'confirmar': 'confirmar_reserva', 'finalizar': 'finalizar_reserva',
+        'destroy': 'eliminar_reserva',
     }
 
     def get_queryset(self):
@@ -527,8 +598,30 @@ class ReservaViewSet(GuardadoViewSet):
         return Response(self.get_serializer(reserva).data)
 
 
-class ReporteViewSet(GestionViewSet):
-    """GET /api/reportes/?tipo=...&formato=... descarga un PDF o un Excel."""
+class HistorialEstadoReservaViewSet(ReglasGestion, viewsets.ReadOnlyModelViewSet):
+    """Solo lectura: el historial lo escriben las acciones de la reserva."""
+
+    queryset = HistorialEstadoReserva.objects.all()
+    serializer_class = HistorialEstadoReservaSerializer
+    permiso_lectura = 'ver_reservas'
+
+    def get_queryset(self):
+        registros = super().get_queryset()
+        if self.request.actor.rol != Usuario.Rol.ADMINISTRADOR:
+            registros = registros.filter(reserva__usuario=self.request.actor)
+        return registros
+
+
+class EventoAuditoriaViewSet(ReglasGestion, viewsets.ReadOnlyModelViewSet):
+    """Solo lectura: la auditoría la escriben guardar(actor) y eliminar(actor)."""
+
+    queryset = EventoAuditoria.objects.all()
+    serializer_class = EventoAuditoriaSerializer
+    permiso_lectura = 'ver_auditoria'
+
+
+class ReporteViewSet(ReglasGestion, viewsets.GenericViewSet):
+    """GET /cowork/reportes/?tipo=...&formato=... descarga un PDF o un Excel."""
 
     permiso_lectura = 'ver_reportes'
 

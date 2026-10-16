@@ -69,14 +69,18 @@ class RutasRouterTests(DatosCoworkTests):
 
     def test_raiz_de_la_api_lista_los_recursos(self):
         datos = self.client.get(reverse('api:api-root'), HTTP_ACCEPT='application/json').json()
-        for recurso in ('sedes', 'tipos-espacio', 'usuarios', 'espacios', 'reservas', 'reportes'):
+        for recurso in (
+            'sedes', 'tipos-espacio', 'usuarios', 'espacios', 'reservas',
+            'historial-reservas', 'eventos-auditoria', 'reportes',
+        ):
             self.assertIn(recurso, datos)
 
     def test_ids_no_numericos_no_coinciden(self):
-        self.assertEqual(self.client.get('/api/espacios/abc/').status_code, 404)
+        self.assertEqual(self.client.get('/cowork/espacios/abc/').status_code, 404)
 
-    def test_delete_solo_en_tipos_de_espacio(self):
-        for nombre, objeto in (('sede', self.sede), ('usuario', self.miembro), ('espacio', self.espacio)):
-            with self.subTest(nombre=nombre):
-                url = reverse(f'api:{nombre}-detail', args=[objeto.pk])
-                self.assertEqual(self.client.delete(url).status_code, 405)
+    def test_router_genera_delete_en_todos_los_recursos(self):
+        sede = reverse('api:sede-detail', args=[self.sede.pk])
+        self.assertEqual(self.client.delete(sede).status_code, 400)
+        self.assertEqual(self.client.delete(reverse('api:espacio-detail', args=[self.espacio.pk])).status_code, 204)
+        self.assertEqual(self.client.delete(sede).status_code, 204)
+        self.assertEqual(self.client.delete(reverse('api:usuario-detail', args=[self.otro.pk])).status_code, 204)

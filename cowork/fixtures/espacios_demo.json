@@ -1,0 +1,122 @@
+[
+    {
+        "model": "cowork.espacio",
+        "pk": 101,
+        "fields": {
+            "sede": 1,
+            "tipo": 4,
+            "nombre": "Sala Andes",
+            "capacidad": 8,
+            "estado": "disponible",
+            "descripcion_publica": "Sala con pantalla de 65\" y videoconferencia.",
+            "observaciones_privadas": "Control remoto en recepción.",
+            "created_at": "2026-10-01T12:00:00Z",
+            "updated_at": "2026-10-01T12:00:00Z"
+        }
+    },
+    {
+        "model": "cowork.espacio",
+        "pk": 102,
+        "fields": {
+            "sede": 1,
+            "tipo": 4,
+            "nombre": "Sala Pacífico",
+            "capacidad": 4,
+            "estado": "disponible",
+            "descripcion_publica": "Sala pequeña para reuniones rápidas.",
+            "observaciones_privadas": "",
+            "created_at": "2026-10-01T12:00:00Z",
+            "updated_at": "2026-10-01T12:00:00Z"
+        }
+    },
+    {
+        "model": "cowork.espacio",
+        "pk": 103,
+        "fields": {
+            "sede": 2,
+            "tipo": 3,
+            "nombre": "Oficina 201",
+            "capacidad": 5,
+            "estado": "disponible",
+            "descripcion_publica": "Oficina privada con ventana y pizarra.",
+            "observaciones_privadas": "Llave en conserjería, piso 2.",
+            "created_at": "2026-10-01T12:00:00Z",
+            "updated_at": "2026-10-01T12:00:00Z"
+        }
+    },
+    {
+        "model": "cowork.espacio",
+        "pk": 104,
+        "fields": {
+            "sede": 2,
+            "tipo": 1,
+            "nombre": "Zona abierta A",
+            "capacidad": 20,
+            "estado": "disponible",
+            "descripcion_publica": "Área de escritorios compartidos con casilleros.",
+            "observaciones_privadas": "",
+            "created_at": "2026-10-01T12:00:00Z",
+            "updated_at": "2026-10-01T12:00:00Z"
+        }
+    },
+    {
+        "model": "cowork.espacio",
+        "pk": 105,
+        "fields": {
+            "sede": 1,
+            "tipo": 5,
+            "nombre": "Cabina 1",
+            "capacidad": 1,
+            "estado": "disponible",
+            "descripcion_publica": "Cabina insonorizada para llamadas.",
+            "observaciones_privadas": "",
+            "created_at": "2026-10-01T12:00:00Z",
+            "updated_at": "2026-10-01T12:00:00Z"
+        }
+    },
+    {
+        "model": "cowork.espacio",
+        "pk": 106,
+        "fields": {
+            "sede": 3,
+            "tipo": 6,
+            "nombre": "Auditorio Costa",
+            "capacidad": 40,
+            "estado": "disponible",
+            "descripcion_publica": "Espacio para talleres con proyector y sonido.",
+            "observaciones_privadas": "Solicitar técnico con 48 h de anticipación.",
+            "created_at": "2026-10-01T12:00:00Z",
+            "updated_at": "2026-10-01T12:00:00Z"
+        }
+    },
+    {
+        "model": "cowork.espacio",
+        "pk": 107,
+        "fields": {
+            "sede": 3,
+            "tipo": 2,
+            "nombre": "Escritorio 12",
+            "capacidad": 1,
+            "estado": "mantenimiento",
+            "descripcion_publica": "Escritorio fijo junto a la ventana.",
+            "observaciones_privadas": "Cambio de silla pendiente.",
+            "created_at": "2026-10-01T12:00:00Z",
+            "updated_at": "2026-10-01T12:00:00Z"
+        }
+    },
+    {
+        "model": "cowork.espacio",
+        "pk": 108,
+        "fields": {
+            "sede": 4,
+            "tipo": 4,
+            "nombre": "Sala Biobío",
+            "capacidad": 6,
+            "estado": "inactivo",
+            "descripcion_publica": "Sala de reuniones de la sede Concepción.",
+            "observaciones_privadas": "Fuera de servicio por remodelación.",
+            "created_at": "2026-10-01T12:00:00Z",
+            "updated_at": "2026-10-01T12:00:00Z"
+        }
+    }
+]

@@ -1,0 +1,162 @@
+[
+    {
+        "model": "auth.user",
+        "pk": 101,
+        "fields": {
+            "username": "admin_demo",
+            "password": "pbkdf2_sha256$1500000$e8oAzwXBBS2bIj2a3uheL4$YqR/wnXyDzMCrq23SWOeZv9nhIv/3/GP/b0etAEdwXM=",
+            "first_name": "Valentina",
+            "last_name": "Rojas",
+            "email": "admin.demo@example.com",
+            "is_active": true,
+            "is_staff": true,
+            "is_superuser": true,
+            "date_joined": "2026-08-01T13:00:00Z",
+            "last_login": null,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "auth.user",
+        "pk": 102,
+        "fields": {
+            "username": "ana_demo",
+            "password": "pbkdf2_sha256$1500000$e8oAzwXBBS2bIj2a3uheL4$YqR/wnXyDzMCrq23SWOeZv9nhIv/3/GP/b0etAEdwXM=",
+            "first_name": "Ana",
+            "last_name": "Muñoz",
+            "email": "ana.demo@example.com",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "date_joined": "2026-08-05T14:00:00Z",
+            "last_login": null,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "auth.user",
+        "pk": 103,
+        "fields": {
+            "username": "bruno_demo",
+            "password": "pbkdf2_sha256$1500000$e8oAzwXBBS2bIj2a3uheL4$YqR/wnXyDzMCrq23SWOeZv9nhIv/3/GP/b0etAEdwXM=",
+            "first_name": "Bruno",
+            "last_name": "Soto",
+            "email": "bruno.demo@example.com",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "date_joined": "2026-08-10T15:00:00Z",
+            "last_login": null,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "auth.user",
+        "pk": 104,
+        "fields": {
+            "username": "carla_demo",
+            "password": "pbkdf2_sha256$1500000$e8oAzwXBBS2bIj2a3uheL4$YqR/wnXyDzMCrq23SWOeZv9nhIv/3/GP/b0etAEdwXM=",
+            "first_name": "Carla",
+            "last_name": "Fuentes",
+            "email": "carla.demo@example.com",
+            "is_active": true,
+            "is_staff": false,
+            "is_superuser": false,
+            "date_joined": "2026-08-15T16:00:00Z",
+            "last_login": null,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "auth.user",
+        "pk": 105,
+        "fields": {
+            "username": "diego_demo",
+            "password": "pbkdf2_sha256$1500000$e8oAzwXBBS2bIj2a3uheL4$YqR/wnXyDzMCrq23SWOeZv9nhIv/3/GP/b0etAEdwXM=",
+            "first_name": "Diego",
+            "last_name": "Contreras",
+            "email": "diego.demo@example.com",
+            "is_active": false,
+            "is_staff": false,
+            "is_superuser": false,
+            "date_joined": "2026-08-20T17:00:00Z",
+            "last_login": null,
+            "groups": [],
+            "user_permissions": []
+        }
+    },
+    {
+        "model": "cowork.usuario",
+        "pk": 101,
+        "fields": {
+            "cuenta": 101,
+            "nombre": "Valentina",
+            "apellido": "Rojas",
+            "correo": "admin.demo@example.com",
+            "rol": "ADMINISTRADOR",
+            "activo": true,
+            "fecha_registro": "2026-08-01T13:00:00Z",
+            "updated_at": "2026-08-01T13:00:00Z"
+        }
+    },
+    {
+        "model": "cowork.usuario",
+        "pk": 102,
+        "fields": {
+            "cuenta": 102,
+            "nombre": "Ana",
+            "apellido": "Muñoz",
+            "correo": "ana.demo@example.com",
+            "rol": "MIEMBRO",
+            "activo": true,
+            "fecha_registro": "2026-08-05T14:00:00Z",
+            "updated_at": "2026-08-05T14:00:00Z"
+        }
+    },
+    {
+        "model": "cowork.usuario",
+        "pk": 103,
+        "fields": {
+            "cuenta": 103,
+            "nombre": "Bruno",
+            "apellido": "Soto",
+            "correo": "bruno.demo@example.com",
+            "rol": "MIEMBRO",
+            "activo": true,
+            "fecha_registro": "2026-08-10T15:00:00Z",
+            "updated_at": "2026-08-10T15:00:00Z"
+        }
+    },
+    {
+        "model": "cowork.usuario",
+        "pk": 104,
+        "fields": {
+            "cuenta": 104,
+            "nombre": "Carla",
+            "apellido": "Fuentes",
+            "correo": "carla.demo@example.com",
+            "rol": "MIEMBRO",
+            "activo": true,
+            "fecha_registro": "2026-08-15T16:00:00Z",
+            "updated_at": "2026-08-15T16:00:00Z"
+        }
+    },
+    {
+        "model": "cowork.usuario",
+        "pk": 105,
+        "fields": {
+            "cuenta": 105,
+            "nombre": "Diego",
+            "apellido": "Contreras",
+            "correo": "diego.demo@example.com",
+            "rol": "MIEMBRO",
+            "activo": false,
+            "fecha_registro": "2026-08-20T17:00:00Z",
+            "updated_at": "2026-08-20T17:00:00Z"
+        }
+    }
+]

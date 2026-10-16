@@ -16,6 +16,7 @@
             {% if espacio.observaciones_privadas %}<p><strong>Observaciones privadas:</strong> {{ espacio.observaciones_privadas|linebreaksbr }}</p>{% endif %}
             <a class="btn btn-sm btn-outline-secondary" href="{% url 'espacio_editar' espacio.pk %}">Editar</a>
             {% if espacio.estado != 'inactivo' %}<a class="btn btn-sm btn-outline-danger" href="{% url 'espacio_desactivar' espacio.pk %}">Inactivar</a>{% endif %}
+            {% if not espacio.total_reservas %}<a class="btn btn-sm btn-danger" href="{% url 'espacio_eliminar' espacio.pk %}">Eliminar</a>{% endif %}
         {% else %}
             <a class="btn btn-primary" href="{% url 'reserva_crear' %}">Crear reserva</a>
         {% endif %}

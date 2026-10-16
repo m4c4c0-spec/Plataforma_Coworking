@@ -22,6 +22,11 @@ class FechaUTC(TypeDecorator):
         return value.replace(tzinfo=timezone.utc) if value is not None else None
 
 
+def ahora_utc():
+    """Equivale a timezone.now de Django para created_at y updated_at."""
+    return datetime.now(timezone.utc)
+
+
 class Base(DeclarativeBase):
     pass
 
@@ -34,6 +39,8 @@ class SedeSQL(Base):
     direccion: Mapped[str] = mapped_column(String(255))
     ciudad: Mapped[str] = mapped_column(String(120))
     activa: Mapped[bool] = mapped_column(Boolean)
+    created_at: Mapped[datetime] = mapped_column(FechaUTC, default=ahora_utc)
+    updated_at: Mapped[datetime] = mapped_column(FechaUTC, default=ahora_utc, onupdate=ahora_utc)
 
 
 class TipoEspacioSQL(Base):
@@ -42,6 +49,8 @@ class TipoEspacioSQL(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     nombre: Mapped[str] = mapped_column(String(80))
     descripcion: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(FechaUTC, default=ahora_utc)
+    updated_at: Mapped[datetime] = mapped_column(FechaUTC, default=ahora_utc, onupdate=ahora_utc)
 
 
 class UsuarioSQL(Base):
@@ -55,6 +64,7 @@ class UsuarioSQL(Base):
     rol: Mapped[str] = mapped_column(String(20))
     activo: Mapped[bool] = mapped_column(Boolean)
     fecha_registro: Mapped[datetime] = mapped_column(FechaUTC)
+    updated_at: Mapped[datetime] = mapped_column(FechaUTC, default=ahora_utc, onupdate=ahora_utc)
 
 
 class EspacioSQL(Base):
@@ -68,6 +78,8 @@ class EspacioSQL(Base):
     observaciones_privadas: Mapped[str] = mapped_column(Text)
     capacidad: Mapped[int] = mapped_column(Integer)
     estado: Mapped[str] = mapped_column(String(20))
+    created_at: Mapped[datetime] = mapped_column(FechaUTC, default=ahora_utc)
+    updated_at: Mapped[datetime] = mapped_column(FechaUTC, default=ahora_utc, onupdate=ahora_utc)
     sede: Mapped[SedeSQL] = relationship(lazy='raise')
     tipo: Mapped[TipoEspacioSQL] = relationship(lazy='raise')
 
@@ -83,6 +95,7 @@ class ReservaSQL(Base):
     cantidad_personas: Mapped[int] = mapped_column(Integer)
     estado: Mapped[str] = mapped_column(String(20))
     fecha_creacion: Mapped[datetime] = mapped_column(FechaUTC)
+    updated_at: Mapped[datetime] = mapped_column(FechaUTC, default=ahora_utc, onupdate=ahora_utc)
     observaciones: Mapped[str] = mapped_column(Text)
     motivo_cancelacion: Mapped[str] = mapped_column(Text)
     usuario: Mapped[UsuarioSQL] = relationship(lazy='raise')

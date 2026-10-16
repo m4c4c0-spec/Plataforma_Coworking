@@ -22,17 +22,13 @@ enrutador.register(r'tipos-espacio', views.TipoEspacioViewSet, basename='tipo-es
 enrutador.register(r'usuarios', views.UsuarioViewSet, basename='usuario')
 enrutador.register(r'espacios', views.EspacioViewSet, basename='espacio')
 enrutador.register(r'reservas', views.ReservaViewSet, basename='reserva')
+enrutador.register(r'historial-reservas', views.HistorialEstadoReservaViewSet, basename='historial-reserva')
+enrutador.register(r'eventos-auditoria', views.EventoAuditoriaViewSet, basename='evento-auditoria')
 enrutador.register(r'reportes', views.ReporteViewSet, basename='reporte')
 
 urlpatterns = [
-    path(
-        '', views.PaginaViewSet.as_view({'get': 'bienvenida'}),
-        name='bienvenida',
-    ),
-    path(
-        'inicio/', views.PaginaViewSet.as_view({'get': 'inicio'}),
-        name='inicio',
-    ),
+    path('', views.bienvenida, name='bienvenida'),
+    path('inicio/', views.inicio, name='inicio'),
     path(
         'ingresar/', views.AutenticacionViewSet.as_view({'get': 'ingresar', 'post': 'ingresar'}),
         name='login',
@@ -58,6 +54,14 @@ urlpatterns = [
         name='usuario_desactivar',
     ),
     path(
+        'usuarios/<int:pk>/activar/', views.UsuarioPantallaViewSet.as_view({'get': 'activar', 'post': 'activar'}),
+        name='usuario_activar',
+    ),
+    path(
+        'usuarios/<int:pk>/eliminar/', views.UsuarioPantallaViewSet.as_view({'get': 'eliminar', 'post': 'eliminar'}),
+        name='usuario_eliminar',
+    ),
+    path(
         'espacios/', views.EspacioPantallaViewSet.as_view({'get': 'list'}),
         name='espacios',
     ),
@@ -74,6 +78,10 @@ urlpatterns = [
         name='espacio_desactivar',
     ),
     path(
+        'espacios/<int:pk>/eliminar/', views.EspacioPantallaViewSet.as_view({'get': 'eliminar', 'post': 'eliminar'}),
+        name='espacio_eliminar',
+    ),
+    path(
         'sedes/', views.SedePantallaViewSet.as_view({'get': 'list'}),
         name='sedes',
     ),
@@ -88,6 +96,10 @@ urlpatterns = [
     path(
         'sedes/<int:pk>/desactivar/', views.SedePantallaViewSet.as_view({'get': 'desactivar', 'post': 'desactivar'}),
         name='sede_desactivar',
+    ),
+    path(
+        'sedes/<int:pk>/eliminar/', views.SedePantallaViewSet.as_view({'get': 'eliminar', 'post': 'eliminar'}),
+        name='sede_eliminar',
     ),
     path(
         'tipos-espacio/', views.TipoEspacioPantallaViewSet.as_view({'get': 'list'}),
@@ -134,9 +146,14 @@ urlpatterns = [
         name='reserva_finalizar',
     ),
     path(
+        'reservas/<int:pk>/eliminar/', views.ReservaPantallaViewSet.as_view({'get': 'eliminar', 'post': 'eliminar'}),
+        name='reserva_eliminar',
+    ),
+    path(
         'reportes/', views.ReportePantallaViewSet.as_view({'get': 'generar'}),
         name='reportes',
     ),
     path('api/mysql/', include((enrutador_mysql.urls, 'api_mysql'))),
-    path('api/', include((enrutador.urls, 'api'))),
+    # CRUD de la API en /cowork/ (por ejemplo /cowork/sedes/), como indica la guía.
+    path('cowork/', include((enrutador.urls, 'api'))),
 ]

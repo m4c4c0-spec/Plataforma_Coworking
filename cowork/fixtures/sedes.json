@@ -6,7 +6,9 @@
             "nombre": "Sede Centro",
             "direccion": "Av. Libertador Bernardo O'Higgins 1234",
             "ciudad": "Santiago",
-            "activa": true
+            "activa": true,
+            "created_at": "2026-10-01T12:00:00Z",
+            "updated_at": "2026-10-01T12:00:00Z"
         }
     },
     {
@@ -16,7 +18,9 @@
             "nombre": "Sede Providencia",
             "direccion": "Av. Providencia 2150",
             "ciudad": "Providencia",
-            "activa": true
+            "activa": true,
+            "created_at": "2026-10-01T12:00:00Z",
+            "updated_at": "2026-10-01T12:00:00Z"
         }
     },
     {
@@ -26,7 +30,9 @@
             "nombre": "Sede Viña del Mar",
             "direccion": "Av. Libertad 1050",
             "ciudad": "Viña del Mar",
-            "activa": true
+            "activa": true,
+            "created_at": "2026-10-01T12:00:00Z",
+            "updated_at": "2026-10-01T12:00:00Z"
         }
     },
     {
@@ -36,7 +42,9 @@
             "nombre": "Sede Concepción",
             "direccion": "Calle Barros Arana 800",
             "ciudad": "Concepción",
-            "activa": true
+            "activa": true,
+            "created_at": "2026-10-01T12:00:00Z",
+            "updated_at": "2026-10-01T12:00:00Z"
         }
     }
 ]

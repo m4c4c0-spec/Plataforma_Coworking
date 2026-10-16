@@ -37,9 +37,9 @@ def obtener_motor_mysql():
     try:
         puerto = int(configuracion.get('PORT') or 3306)
     except (TypeError, ValueError) as error:
-        raise ImproperlyConfigured('MYSQL_PORT debe ser un número entero.') from error
+        raise ImproperlyConfigured('PORT debe ser un número entero.') from error
     if not 1 <= puerto <= 65535:
-        raise ImproperlyConfigured('MYSQL_PORT debe estar entre 1 y 65535.')
+        raise ImproperlyConfigured('PORT debe estar entre 1 y 65535.')
     opciones = configuracion.get('OPTIONS', {})
     # URL.create conserva contraseñas con @, :, / o # sin concatenarlas en una URL.
     url = URL.create(

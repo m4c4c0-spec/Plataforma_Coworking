@@ -107,7 +107,8 @@ class CatalogosApiTests(DatosCoworkTests):
         respuesta = self.client.post(reverse('api:sede-desactivar', args=[respuesta.data['id']]))
         self.assertEqual(respuesta.status_code, 200)
         self.assertFalse(respuesta.data['activa'])
-        self.assertEqual(self.client.delete(url).status_code, 405)
+        self.assertEqual(self.client.delete(url).status_code, 204)
+        self.assertTrue(EventoAuditoria.objects.filter(accion='eliminar', tipo_entidad='sede').exists())
 
     def test_crud_de_tipo(self):
         respuesta = self.client.post(reverse('api:tipo-espacio-list'), {'nombre': 'Cabina'}, format='json')

@@ -7,7 +7,7 @@
     <p>{{ descripcion }}</p>
     <form method="post">
         {% csrf_token %}
-        <button type="submit" class="btn btn-danger">Confirmar</button>
+        <button type="submit" class="btn {{ boton|default:'btn-danger' }}">Confirmar</button>
         <a class="btn btn-outline-secondary" href="{% url volver %}">Volver</a>
     </form>
 </section>

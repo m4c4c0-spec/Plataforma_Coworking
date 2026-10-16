@@ -25,19 +25,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Los datos sensibles se leen desde el archivo .env (ver .env.example).
 SECRET_KEY = config('SECRET_KEY')
 
-# Mantiene las páginas de error personalizadas, también durante el desarrollo.
-DEBUG = False
+# Se lee desde .env; por defecto False para mantener las páginas de error personalizadas.
+DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1'
 ]
-
-# Avoid exposing Django's conventional /admin/ endpoint to automated scanners.
-ADMIN_URL_PATH = config('DJANGO_ADMIN_URL_PATH', default='gestion-interna').strip('/')
-if not ADMIN_URL_PATH:
-    raise ValueError('DJANGO_ADMIN_URL_PATH cannot be empty.')
-ADMIN_URL_PATH = f'{ADMIN_URL_PATH}/'
 
 
 # Application definition
@@ -109,14 +103,15 @@ WSGI_APPLICATION = 'drf.wsgi.application'
 
 # MySQL/MariaDB es la base principal. Las credenciales se leen desde .env.
 # Django 6.1 admite MySQL 8.4+ y MariaDB 10.11+ (ver README).
+# decouple prioriza las variables del sistema: en Linux/macOS USER ya existe (ver README).
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': config('MYSQL_DATABASE'),
-        'USER': config('MYSQL_USER'),
-        'PASSWORD': config('MYSQL_PASSWORD', default=''),
-        'HOST': config('MYSQL_HOST', default='127.0.0.1'),
-        'PORT': config('MYSQL_PORT', default='3306'),
+        'NAME': config('NAME'),
+        'HOST': config('HOST', default='127.0.0.1'),
+        'PORT': config('PORT', default='3306'),
+        'USER': config('USER'),
+        'PASSWORD': config('PASSWORD', default=''),
         'OPTIONS': {
             'charset': 'utf8mb4',
             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",

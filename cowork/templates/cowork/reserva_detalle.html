@@ -24,6 +24,9 @@
         {% if es_admin and reserva.estado == 'confirmada' %}
             <form method="post" action="{% url 'reserva_finalizar' reserva.pk %}">{% csrf_token %}<button class="btn btn-outline-primary" type="submit">Finalizar</button></form>
         {% endif %}
+        {% if reserva.estado == 'pendiente' or reserva.estado == 'cancelada' %}
+            <a class="btn btn-danger" href="{% url 'reserva_eliminar' reserva.pk %}">Eliminar</a>
+        {% endif %}
         <a class="btn btn-outline-secondary" href="{% url 'reservas' %}">Volver</a>
     </div>
 </section>

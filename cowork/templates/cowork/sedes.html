@@ -15,6 +15,7 @@
                 <td>
                     <a class="btn btn-sm btn-outline-secondary" href="{% url 'sede_editar' sede.pk %}">Editar</a>
                     {% if sede.activa %}<a class="btn btn-sm btn-outline-danger" href="{% url 'sede_desactivar' sede.pk %}">Desactivar</a>{% endif %}
+                    {% if not sede.total_espacios %}<a class="btn btn-sm btn-danger" href="{% url 'sede_eliminar' sede.pk %}">Eliminar</a>{% endif %}
                 </td>
             </tr>
         {% empty %}<tr><td colspan="5">No hay sedes registradas.</td></tr>{% endfor %}

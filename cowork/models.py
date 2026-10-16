@@ -42,6 +42,7 @@ class Usuario(models.Model):
     rol = models.CharField(max_length=20, choices=Rol.choices, default=Rol.MIEMBRO)
     activo = models.BooleanField(default=True)
     fecha_registro = models.DateTimeField(default=timezone.now, editable=False)
+    updated_at = models.DateTimeField('fecha de actualización', auto_now=True)
 
     class Meta:
         ordering = ['apellido', 'nombre']
@@ -89,7 +90,10 @@ class Usuario(models.Model):
     def puedeRealizar(self, accion):
         if not self.activo or not self.cuenta.is_active:
             return False
-        comunes = {'ver_espacios', 'ver_reservas', 'crear_reserva', 'editar_reserva', 'cancelar_reserva'}
+        comunes = {
+            'ver_espacios', 'ver_reservas', 'crear_reserva', 'editar_reserva',
+            'cancelar_reserva', 'eliminar_reserva',
+        }
         administrativas = {
             'gestionar_usuarios', 'gestionar_espacios', 'confirmar_reserva',
             'finalizar_reserva', 'ver_reportes', 'ver_auditoria',
@@ -106,6 +110,10 @@ class Usuario(models.Model):
     def guardar(self, actor):
         actor = exigir_permiso(actor, 'gestionar_usuarios')
         anterior = Usuario.objects.select_for_update().filter(pk=self.pk).first()
+        if anterior is not None and self.pk == actor.pk and (
+            not self.activo or self.rol != self.Rol.ADMINISTRADOR
+        ):
+            raise ValidationError('No puedes desactivar tu propia cuenta ni quitarte el rol de administrador.')
         self.full_clean()
         self.save()
         self._sincronizar_cuenta()
@@ -119,14 +127,42 @@ class Usuario(models.Model):
         cuenta.save(update_fields=['first_name', 'last_name', 'email', 'is_active'])
 
     def desactivar(self, actor):
-        with transaction.atomic():
-            actual = Usuario.objects.select_for_update().get(pk=self.pk)
-            actual.activo = False
-            actual.guardar(actor)
-            self.refresh_from_db()
+        self._cambiar_activo(False, actor)
+
+    def activar(self, actor):
+        """Devuelve el acceso: guardar() también reactiva la cuenta de Django."""
+        self._cambiar_activo(True, actor)
+
+    @transaction.atomic
+    def _cambiar_activo(self, activo, actor):
+        actual = Usuario.objects.select_for_update().get(pk=self.pk)
+        actual.activo = activo
+        actual.guardar(actor)
+        self.refresh_from_db()
+
+    @transaction.atomic
+    def eliminar(self, actor):
+        """Borra el perfil y su cuenta si no tiene reservas ni acciones registradas."""
+        actor = exigir_permiso(actor, 'gestionar_usuarios')
+        actual = Usuario.objects.select_for_update().select_related('cuenta').get(pk=self.pk)
+        if actual.pk == actor.pk:
+            raise ValidationError('No puedes eliminar tu propia cuenta.')
+        if actual.reservas.exists():
+            raise ValidationError(
+                'No se puede eliminar un usuario con reservas. Desactívalo para conservar su historial.'
+            )
+        if actual.eventos_auditoria.exists() or actual.cambios_reserva.exists():
+            raise ValidationError(
+                'No se puede eliminar un usuario con acciones registradas en la auditoría '
+                'o en el historial de reservas. Desactívalo.'
+            )
+        EventoAuditoria.registrar_eliminacion(actor, actual)
+        cuenta = actual.cuenta
+        models.Model.delete(actual)
+        cuenta.delete()
 
     def delete(self, *args, **kwargs):
-        raise ValidationError('Los usuarios se desactivan; no se eliminan.')
+        raise ValidationError('Utiliza eliminar(actor) para aplicar las reglas y registrar la auditoría.')
 
 
 class Sede(models.Model):
@@ -134,6 +170,8 @@ class Sede(models.Model):
     direccion = models.CharField(max_length=255)
     ciudad = models.CharField(max_length=120)
     activa = models.BooleanField(default=True)
+    created_at = models.DateTimeField('fecha de creación', default=timezone.now, editable=False)
+    updated_at = models.DateTimeField('fecha de actualización', auto_now=True)
 
     class Meta:
         verbose_name = 'sede'
@@ -159,13 +197,27 @@ class Sede(models.Model):
             actual.guardar(actor)
             self.refresh_from_db()
 
+    @transaction.atomic
+    def eliminar(self, actor):
+        """Solo se eliminan sedes sin espacios; la auditoría conserva sus valores."""
+        actor = exigir_permiso(actor, 'gestionar_espacios')
+        actual = type(self).objects.select_for_update().get(pk=self.pk)
+        if actual.espacios.exists():
+            raise ValidationError(
+                'No se puede eliminar una sede con espacios. Desactívala o elimina primero sus espacios.'
+            )
+        EventoAuditoria.registrar_eliminacion(actor, actual)
+        models.Model.delete(actual)
+
     def delete(self, *args, **kwargs):
-        raise ValidationError('Las sedes se desactivan; no se eliminan.')
+        raise ValidationError('Utiliza eliminar(actor) para aplicar las reglas y registrar la auditoría.')
 
 
 class TipoEspacio(models.Model):
     nombre = models.CharField(max_length=80, unique=True)
     descripcion = models.TextField(blank=True)
+    created_at = models.DateTimeField('fecha de creación', default=timezone.now, editable=False)
+    updated_at = models.DateTimeField('fecha de actualización', auto_now=True)
 
     class Meta:
         verbose_name = 'tipo de espacio'
@@ -190,10 +242,7 @@ class TipoEspacio(models.Model):
         actual = type(self).objects.select_for_update().get(pk=self.pk)
         if actual.espacios.exists():
             raise ValidationError('No se puede eliminar un tipo con espacios asociados.')
-        EventoAuditoria.objects.create(
-            actor=actor, accion='eliminar', tipo_entidad=self._meta.model_name,
-            id_entidad=actual.pk, valores_anteriores=valores_entidad(actual),
-        )
+        EventoAuditoria.registrar_eliminacion(actor, actual)
         actual.delete()
 
 
@@ -220,6 +269,8 @@ class Espacio(models.Model):
     observaciones_privadas = models.TextField(blank=True)
     capacidad = models.PositiveIntegerField()
     estado = models.CharField(max_length=20, choices=Estado.choices, default=Estado.DISPONIBLE)
+    created_at = models.DateTimeField('fecha de creación', default=timezone.now, editable=False)
+    updated_at = models.DateTimeField('fecha de actualización', auto_now=True)
 
     class Meta:
         verbose_name = 'espacio'
@@ -284,8 +335,20 @@ class Espacio(models.Model):
             actual.guardar(actor)
             self.refresh_from_db()
 
+    @transaction.atomic
+    def eliminar(self, actor):
+        """Solo se eliminan espacios sin reservas; la auditoría conserva sus valores."""
+        actor = exigir_permiso(actor, 'gestionar_espacios')
+        actual = type(self).objects.select_for_update().get(pk=self.pk)
+        if actual.reservas.exists():
+            raise ValidationError(
+                'No se puede eliminar un espacio con reservas. Inactívalo para conservar su historial.'
+            )
+        EventoAuditoria.registrar_eliminacion(actor, actual)
+        models.Model.delete(actual)
+
     def delete(self, *args, **kwargs):
-        raise ValidationError('Los espacios se inactivan; no se eliminan.')
+        raise ValidationError('Utiliza eliminar(actor) para aplicar las reglas y registrar la auditoría.')
 
 
 class Reserva(models.Model):
@@ -322,6 +385,7 @@ class Reserva(models.Model):
         default=Estado.PENDIENTE,
     )
     fecha_creacion = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField('fecha de actualización', auto_now=True)
     observaciones = models.TextField(blank=True)
     motivo_cancelacion = models.TextField(blank=True)
 
@@ -454,8 +518,22 @@ class Reserva(models.Model):
     def finalizar(self, actor):
         self._cambiar_estado(self.Estado.FINALIZADA, actor)
 
+    @transaction.atomic
+    def eliminar(self, actor):
+        """Borra una reserva pendiente o cancelada junto con su historial."""
+        actual = type(self).objects.select_for_update().get(pk=self.pk)
+        actor = actual._exigir_actor(actor, 'eliminar_reserva')
+        if actual.estado not in (self.Estado.PENDIENTE, self.Estado.CANCELADA):
+            raise ValidationError(
+                'Solo se pueden eliminar reservas pendientes o canceladas. Cancela primero una '
+                'reserva confirmada; las finalizadas se conservan para los reportes.'
+            )
+        EventoAuditoria.registrar_eliminacion(actor, actual)
+        actual.historial.all().delete()
+        models.Model.delete(actual)
+
     def delete(self, *args, **kwargs):
-        raise ValidationError('Las reservas se cancelan; no se eliminan.')
+        raise ValidationError('Utiliza eliminar(actor) para aplicar las reglas y registrar la auditoría.')
 
 
 class HistorialEstadoReserva(models.Model):
@@ -503,6 +581,14 @@ class EventoAuditoria(models.Model):
             actor=actor, accion=accion, tipo_entidad=entidad._meta.concrete_model._meta.model_name,
             id_entidad=entidad.pk, valores_anteriores=anteriores,
             valores_nuevos=valores_entidad(entidad),
+        )
+
+    @classmethod
+    def registrar_eliminacion(cls, actor, entidad):
+        """Conserva los valores del registro antes de borrarlo."""
+        return cls.objects.create(
+            actor=actor, accion='eliminar', tipo_entidad=entidad._meta.concrete_model._meta.model_name,
+            id_entidad=entidad.pk, valores_anteriores=valores_entidad(entidad),
         )
 
     @classmethod
