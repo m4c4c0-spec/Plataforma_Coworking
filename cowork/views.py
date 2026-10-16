@@ -16,7 +16,7 @@ from rest_framework.decorators import action
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.exceptions import APIException, NotFound
 from rest_framework.permissions import AllowAny, BasePermission, IsAuthenticated
-from rest_framework.renderers import JSONRenderer, TemplateHTMLRenderer
+from rest_framework.renderers import BrowsableAPIRenderer, JSONRenderer, TemplateHTMLRenderer
 from rest_framework.response import Response
 from sqlalchemy import func, select
 from sqlalchemy.exc import SQLAlchemyError
@@ -470,7 +470,7 @@ class ReglasGestion:
 
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated, PermisoGestion]
-    renderer_classes = [JSONRenderer]
+    renderer_classes = [JSONRenderer, BrowsableAPIRenderer]
     # DefaultRouter genera <int:pk>, igual que las rutas de las pantallas.
     lookup_value_converter = 'int'
     permiso_lectura = 'ver_espacios'

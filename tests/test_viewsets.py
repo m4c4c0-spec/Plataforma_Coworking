@@ -36,7 +36,7 @@ class GestionViewSetTests(DatosCoworkTests):
         self.assertEqual(reserva.usuario, self.miembro)
         self.assertEqual(reserva.estado, Reserva.Estado.PENDIENTE)
         self.assertEqual(reserva.historial.get().responsable, self.miembro)
-        self.assertTrue(respuesta.data['inicio'].endswith('Z'))
+        self.assertEqual(respuesta.data['inicio'], timezone.localtime(reserva.inicio).isoformat())
         url = reverse('api:reserva-detail', args=[reserva.pk])
         respuesta = self.client.patch(url, {'cantidad_personas': 3}, format='json')
         self.assertEqual(respuesta.status_code, 200, respuesta.data)
@@ -47,6 +47,17 @@ class GestionViewSetTests(DatosCoworkTests):
         self.assertEqual(respuesta.status_code, 200, respuesta.data)
         reserva.refresh_from_db()
         self.assertEqual(reserva.observaciones, 'Con proyector')
+
+    def test_hora_sin_zona_se_interpreta_en_hora_de_chile(self):
+        # Es lo que envía el formulario de la API navegable (input datetime-local).
+        local = timezone.localtime(self.inicio).replace(hour=10, minute=0, second=0, microsecond=0)
+        respuesta = self.client.post(reverse('api:reserva-list'), self.datos_reserva(
+            inicio=local.strftime('%Y-%m-%dT%H:%M'),
+            fin=(local + timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M'),
+        ), format='json')
+        self.assertEqual(respuesta.status_code, 201, respuesta.data)
+        self.assertEqual(Reserva.objects.get(pk=respuesta.data['id']).inicio, local)
+        self.assertEqual(respuesta.data['inicio'], local.isoformat())
 
     def test_errores_de_horario_y_capacidad_no_guardan(self):
         for cambios, campo in (
@@ -337,3 +348,36 @@ class GestionViewSetTests(DatosCoworkTests):
         token = cliente.cookies['csrftoken'].value
         respuesta = cliente.post(url, self.datos_reserva(), format='json', HTTP_X_CSRFTOKEN=token)
         self.assertEqual(respuesta.status_code, 201, respuesta.data)
+
+
+class APINavegableTests(DatosCoworkTests):
+    """La API de /cowork/ se puede recorrer y usar desde el navegador (paso 17 de la guía)."""
+
+    NAVEGADOR = 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
+
+    def get_html(self, perfil, url):
+        cliente = APIClient(HTTP_HOST='localhost')
+        cliente.force_login(perfil.cuenta)
+        return cliente.get(url, HTTP_ACCEPT=self.NAVEGADOR)
+
+    def test_navegador_recibe_html_y_los_clientes_json(self):
+        respuesta = self.get_html(self.admin, reverse('api:sede-list'))
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertIn('text/html', respuesta['Content-Type'])
+        self.assertContains(respuesta, 'method="POST"')
+        self.client.force_login(self.admin.cuenta)
+        respuesta = self.client.get(reverse('api:sede-list'))
+        self.assertEqual(respuesta['Content-Type'], 'application/json')
+
+    def test_formularios_no_muestran_usuarios_ajenos_ni_contrasenas(self):
+        respuesta = self.get_html(self.miembro, reverse('api:reserva-list'))
+        self.assertContains(respuesta, 'method="POST"')
+        self.assertNotContains(respuesta, self.otro.correo)
+        self.assertNotContains(respuesta, f'>{self.otro}</option>')
+        respuesta = self.get_html(self.admin, reverse('api:usuario-list'))
+        self.assertContains(respuesta, 'name="password"')
+        self.assertContains(respuesta, 'type="password"')
+
+    def test_sin_sesion_responde_403(self):
+        respuesta = APIClient(HTTP_HOST='localhost').get(reverse('api:sede-list'), HTTP_ACCEPT=self.NAVEGADOR)
+        self.assertEqual(respuesta.status_code, 403)

@@ -1,6 +1,7 @@
-"""Serializers de la API de gestión de la base principal."""
+"""Serializers de la API de gestión de la base principal.
 
-from datetime import timezone
+Las fechas se leen y se muestran en TIME_ZONE (hora de Chile), igual que en las pantallas.
+"""
 
 from rest_framework import serializers
 from rest_framework.exceptions import PermissionDenied
@@ -26,8 +27,10 @@ class GuardarModelSerializer(serializers.ModelSerializer):
 
 class UsuarioGestionSerializer(serializers.ModelSerializer):
     nombre_usuario = serializers.CharField(max_length=150, write_only=True, required=False)
-    password = serializers.CharField(write_only=True, required=False, allow_blank=True, trim_whitespace=False)
-    fecha_registro = serializers.DateTimeField(read_only=True, default_timezone=timezone.utc)
+    password = serializers.CharField(
+        write_only=True, required=False, allow_blank=True, trim_whitespace=False,
+        style={'input_type': 'password'},
+    )
 
     class Meta:
         model = Usuario
@@ -98,11 +101,11 @@ class EspacioGestionSerializer(GuardarModelSerializer):
 
 
 class ReservaGestionSerializer(GuardarModelSerializer):
-    usuario = serializers.PrimaryKeyRelatedField(queryset=Usuario.objects.all(), required=False)
+    # En la API navegable se escribe el ID: una lista desplegable mostraría a todos los usuarios.
+    usuario = serializers.PrimaryKeyRelatedField(
+        queryset=Usuario.objects.all(), required=False, style={'base_template': 'input.html'},
+    )
     cantidad_personas = serializers.IntegerField(min_value=1, required=False)
-    inicio = serializers.DateTimeField(default_timezone=timezone.utc)
-    fin = serializers.DateTimeField(default_timezone=timezone.utc)
-    fecha_creacion = serializers.DateTimeField(read_only=True, default_timezone=timezone.utc)
 
     class Meta:
         model = Reserva
@@ -132,8 +135,6 @@ class CancelacionSerializer(serializers.Serializer):
 
 
 class HistorialEstadoReservaSerializer(serializers.ModelSerializer):
-    fecha_cambio = serializers.DateTimeField(read_only=True, default_timezone=timezone.utc)
-
     class Meta:
         model = HistorialEstadoReserva
         fields = ['id', 'reserva', 'estado_anterior', 'estado_nuevo', 'responsable', 'fecha_cambio', 'motivo']
@@ -141,8 +142,6 @@ class HistorialEstadoReservaSerializer(serializers.ModelSerializer):
 
 
 class EventoAuditoriaSerializer(serializers.ModelSerializer):
-    fecha = serializers.DateTimeField(read_only=True, default_timezone=timezone.utc)
-
     class Meta:
         model = EventoAuditoria
         fields = [
